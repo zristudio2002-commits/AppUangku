@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Keuangan Keluarga Enterprise</title>
+    
+    <!-- PWA Manifest Placeholder -->
+    <link id="manifest-link" rel="manifest" href="">
+    <meta name="theme-color" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { brand: '#10b981', brandDark: '#059669', dark: '#0f172a' }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome & Chart.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .modal-active { overflow: hidden; }
+        video { transform: scaleX(-1); } /* Mirror camera */
+        
+        /* Smooth transitions */
+        .page-content { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="text-slate-800 pb-20">
+
+    <!-- Top App Bar -->
+    <header class="bg-brand text-white shadow-md sticky top-0 z-30 pt-safe">
+        <div class="px-4 py-4 flex justify-between items-center max-w-2xl mx-auto">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-wallet"></i> KeuanganKita
+            </h1>
+            <div class="flex gap-3">
+                <button onclick="installPWA()" id="installBtn" class="hidden bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full text-sm font-semibold transition">
+                    <i class="fa-solid fa-download mr-1"></i> Install
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main id="app-container" class="max-w-2xl mx-auto p-4 page-content relative min-h-screen">
+        <!-- Content injected via JS -->
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 w-full glass border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-30 pb-safe">
+        <div class="max-w-2xl mx-auto flex justify-around items-center py-2 relative">
+            <!-- Nav Items -->
+            <button onclick="navigate('dashboard')" class="nav-btn flex flex-col items-center p-2 w-16 text-slate-400 hover:text-brand transition" data-target="dashboard">
+                <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Dasbor</span>
+            </button>
+            <button onclick="navigate('transactions')" class="nav-btn flex flex-col items-center p-2 w-16 text-slate-400 hover:text-brand transition" data-target="transactions">
+                <i class="fa-solid fa-list text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Riwayat</span>
+            </button>
+            
+            <!-- FAB (Floating Action Button) -->
+            <div class="relative -top-6">
+                <button onclick="openModal('addTransactionModal')" class="bg-brand hover:bg-brandDark text-white w-14 h-14 rounded-full shadow-lg shadow-brand/40 flex items-center justify-center text-2xl transition transform hover:scale-105 active:scale-95 border-4 border-[#f8fafc]">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <button onclick="navigate('targets')" class="nav-btn flex flex-col items-center p-2 w-16 text-slate-400 hover:text-brand transition" data-target="targets">
+                <i class="fa-solid fa-bullseye text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Target</span>
+            </button>
+            <button onclick="navigate('settings')" class="nav-btn flex flex-col items-center p-2 w-16 text-slate-400 hover:text-brand transition" data-target="settings">
+                <i class="fa-solid fa-shield-halved text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Sistem</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Global Message Modal (Replacement for alert) -->
+    <div id="msgModal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl transform scale-95 transition-transform duration-200" id="msgModalContent">
+            <div class="text-center">
+                <div id="msgIcon" class="text-4xl mb-3 text-brand"><i class="fa-solid fa-circle-info"></i></div>
+                <h3 id="msgTitle" class="text-lg font-bold mb-2">Informasi</h3>
+                <p id="msgText" class="text-slate-600 mb-6 text-sm"></p>
+                <button onclick="closeMsgModal()" class="w-full bg-brand text-white py-3 rounded-xl font-semibold hover:bg-brandDark transition">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Auth Modal (Camera & GPS) -->
+    <div id="securityModal" class="fixed inset-0 bg-black/90 z-[90] hidden flex-col items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div class="bg-red-500 p-4 text-white text-center">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-lock mr-2"></i>Otorisasi Keamanan</h3>
+                <p class="text-xs opacity-90">Penghapusan data wajib melampirkan foto wajah & lokasi</p>
+            </div>
+            <div class="p-5 flex flex-col items-center gap-4">
+                <div class="relative w-full aspect-square bg-slate-100 rounded-2xl overflow-hidden shadow-inner border-2 border-dashed border-slate-300">
+                    <video id="securityVideo" class="w-full h-full object-cover hidden" autoplay playsinline></video>
+                    <div id="cameraLoading" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                        <i class="fa-solid fa-camera animate-pulse text-3xl mb-2"></i>
+                        <span class="text-sm font-medium">Menghidupkan Kamera...</span>
+                    </div>
+                </div>
+                
+                <div class="w-full text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div class="flex justify-between mb-1">
+                        <span><i class="fa-solid fa-location-dot mr-1 text-red-400"></i> Lokasi GPS:</span>
+                        <span id="gpsStatus" class="font-mono font-medium text-orange-500">Mencari...</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span><i class="fa-solid fa-clock mr-1 text-blue-400"></i> Waktu:</span>
+                        <span id="authTime" class="font-mono font-medium"></span>
+                    </div>
+                </div>
+
+                <div class="flex w-full gap-3 mt-2">
+                    <button onclick="cancelSecurityAuth()" class="flex-1 py-3 bg-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-300 transition">Batal</button>
+                    <button id="btnAuthDelete" disabled onclick="executeSecureAction()" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition opacity-50 cursor-not-allowed flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-fingerprint"></i> Hapus Data
+                    </button>
+                </div>
+            </div>
+        </div>
+        <canvas id="securityCanvas" class="hidden"></canvas>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="addTransactionModal" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4">
+        <div class="bg-white w-full max-w-md sm:rounded-3xl rounded-t-3xl h-[85vh] sm:h-auto flex flex-col shadow-2xl transition-transform transform translate-y-full sm:translate-y-0" id="txModalContent">
+            <div class="p-4 border-b flex justify-between items-center sticky top-0 bg-white sm:rounded-t-3xl z-10">
+                <h2 class="font-bold text-lg">Catat Transaksi</h2>
+                <button onclick="closeModal('addTransactionModal')" class="w-8 h-8 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto hide-scrollbar pb-24">
+                <form id="txForm" onsubmit="saveTransaction(event)">
+                    <!-- Type Toggle -->
+                    <div class="flex bg-slate-100 p-1 rounded-xl mb-4">
+                        <label class="flex-1 text-center relative cursor-pointer">
+                            <input type="radio" name="txType" value="pengeluaran" class="peer sr-only" checked onchange="updateCategoryOptions()">
+                            <div class="py-2 text-sm font-medium rounded-lg peer-checked:bg-white peer-checked:text-rose-600 peer-checked:shadow-sm transition">Pengeluaran</div>
+                        </label>
+                        <label class="flex-1 text-center relative cursor-pointer">
+                            <input type="radio" name="txType" value="pemasukan" class="peer sr-only" onchange="updateCategoryOptions()">
+                            <div class="py-2 text-sm font-medium rounded-lg peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm transition">Pemasukan</div>
+                        </label>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">Nominal (Rp)</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">Rp</span>
+                                <input type="number" id="txAmount" required placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 font-bold text-lg outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Tanggal</label>
+                                <input type="date" id="txDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-brand">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Kategori</label>
+                                <select id="txCategory" required class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-brand appearance-none">
+                                    <!-- Options injected via JS -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">Anggota (Tim/Keluarga)</label>
+                            <input type="text" id="txMember" list="memberList" required placeholder="Cth: Ayah, Ibu, Anak" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-brand" autocomplete="off">
+                            <datalist id="memberList"></datalist>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">Keterangan</label>
+                            <input type="text" id="txDesc" placeholder="Beli makan siang..." class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-brand">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">Lampiran Foto/Struk (Otomatis Kompres)</label>
+                            <div class="relative border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:bg-slate-50 transition cursor-pointer" onclick="document.getElementById('txImage').click()">
+                                <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2"></i>
+                                <p class="text-xs text-slate-500 font-medium" id="txImageName">Klik untuk upload foto</p>
+                                <input type="file" id="txImage" accept="image/*" class="hidden" onchange="handleImageCompress(event, 'txImagePreview', 'txImageName')">
+                            </div>
+                            <img id="txImagePreview" src="" class="hidden mt-2 rounded-lg max-h-32 mx-auto shadow-sm border">
+                            <input type="hidden" id="txImageBase64">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-brand hover:bg-brandDark text-white py-3.5 rounded-xl font-bold mt-6 shadow-lg shadow-brand/30 transition">Simpan Transaksi</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Target Tabungan Modal -->
+    <div id="addTargetModal" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-bold text-lg">Target Tabungan Baru</h2>
+                <button onclick="closeModal('addTargetModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveTarget(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Target</label>
+                    <input type="text" id="targetName" required placeholder="Cth: Beli Laptop Baru" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Target Dana (Rp)</label>
+                    <input type="number" id="targetAmount" required placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mt-2 hover:bg-blue-700 transition">Buat Target</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Funds to Target Modal -->
+    <div id="addFundsModal" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-bold text-lg">Tambah Dana Target</h2>
+                <button onclick="closeModal('addFundsModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="processAddFunds(event)" class="space-y-4">
+                <input type="hidden" id="fundTargetId">
+                <div class="bg-blue-50 p-3 rounded-xl mb-4">
+                    <p class="text-xs text-blue-600 font-semibold mb-1">Target:</p>
+                    <p id="fundTargetLabel" class="font-bold text-sm text-blue-900"></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Nominal (Rp)</label>
+                    <input type="number" id="fundAmount" required placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-2">Sumber Dana</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50">
+                            <input type="radio" name="fundSource" value="main" checked class="text-brand w-4 h-4 mr-3">
+                            <div>
+                                <p class="text-sm font-semibold">Potong Saldo Utama</p>
+                                <p class="text-[10px] text-slate-500">Otomatis tercatat sbg pengeluaran</p>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50">
+                            <input type="radio" name="fundSource" value="new" class="text-brand w-4 h-4 mr-3">
+                            <div>
+                                <p class="text-sm font-semibold">Uang Baru (Di luar Saldo)</p>
+                                <p class="text-[10px] text-slate-500">Tidak memotong saldo dompet</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-brand text-white py-3 rounded-xl font-bold mt-2 hover:bg-brandDark transition">Setor Dana</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div id="imagePreviewModal" class="fixed inset-0 bg-black/90 z-[100] hidden flex items-center justify-center p-4" onclick="closeModal('imagePreviewModal')">
+        <img id="fullImagePreview" src="" class="max-w-full max-h-full rounded-lg shadow-2xl object-contain">
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        /* ==================== STATE & CLOUD MANAGEMENT ==================== */
+        const APP_VERSION = '2.0 (Cloud Edition)';
+        let db = {
+            balance: 0,
+            transactions: [],
+            targets: [],
+            auditLog: []
+        };
+        let currentPage = 'dashboard';
+
+        const CATEGORIES = {
+            pengeluaran: ['Makanan', 'Transportasi', 'Belanja', 'Tagihan', 'Hiburan', 'Kesehatan', 'Pendidikan', 'Tabungan Target', 'Lainnya'],
+            pemasukan: ['Gaji', 'Bonus', 'Bisnis', 'Investasi', 'Hadiah', 'Lainnya']
+        };
+
+        // Firebase Initialization
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'keuangan-enterprise';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        
+        let firebaseApp, auth, firestoreDb, userId;
+
+        try {
+            firebaseApp = initializeApp(firebaseConfig);
+            auth = getAuth(firebaseApp);
+            firestoreDb = getFirestore(firebaseApp);
+        } catch (e) {
+            console.error("Firebase init error:", e);
+        }
+
+        async function initAuth() {
+            if (!auth) return;
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                    userId = userCredential.user.uid;
+                } else {
+                    const userCredential = await signInAnonymously(auth);
+                    userId = userCredential.user.uid;
+                }
+                setupRealtimeListeners();
+            } catch (err) {
+                console.error("Auth Error:", err);
+                showMsg('Koneksi Gagal', 'Tidak dapat terhubung ke Cloud Storage.');
+            }
+        }
+
+        function setupRealtimeListeners() {
+            if (!userId) return;
+
+            // Transactions Listener
+            onSnapshot(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'transactions'), (snapshot) => {
+                db.transactions = snapshot.docs.map(doc => doc.data());
+                recalculateBalance();
+                if (currentPage === 'dashboard') renderDashboard();
+                if (currentPage === 'transactions') renderTransactions();
+            }, (error) => console.error("Tx Listener Error:", error));
+
+            // Targets Listener
+            onSnapshot(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'targets'), (snapshot) => {
+                db.targets = snapshot.docs.map(doc => doc.data());
+                if (currentPage === 'targets') renderTargets();
+            }, (error) => console.error("Target Listener Error:", error));
+
+            // Audit Log Listener
+            onSnapshot(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'auditLog'), (snapshot) => {
+                db.auditLog = snapshot.docs.map(doc => doc.data());
+                if (currentPage === 'settings') renderSettings();
+            }, (error) => console.error("Audit Listener Error:", error));
+        }
+
+        function recalculateBalance() {
+            let total = 0;
+            db.transactions.forEach(t => {
+                if(t.type === 'pemasukan') total += t.amount;
+                if(t.type === 'pengeluaran') total -= t.amount;
+            });
+            db.balance = total;
+        }
+
+        function formatRp(angka) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        }
+        function formatDate(dateStr) {
+            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+            return new Date(dateStr).toLocaleDateString('id-ID', options);
+        }
+
+        /* ==================== CORE UI LOGIC ==================== */
+        
+        let currentChart = null;
+        let currentChartType = 'gabungan'; // Default ke gabungan
+        let dashboardChartData = { pemasukan: {}, pengeluaran: {}, gabungan: {} };
+
+        function navigate(page) {
+            currentPage = page;
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.dataset.target === page) {
+                    btn.classList.add('text-brand');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('text-brand');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+
+            const container = document.getElementById('app-container');
+            container.classList.remove('page-content'); 
+            void container.offsetWidth; 
+            container.classList.add('page-content');
+
+            if (page === 'dashboard') renderDashboard();
+            else if (page === 'transactions') renderTransactions();
+            else if (page === 'targets') renderTargets();
+            else if (page === 'settings') renderSettings();
+        }
+
+        function renderDashboard() {
+            let income = 0, expense = 0;
+            let expByCategory = {};
+            let incByCategory = {};
+            let memberStats = {};
+
+            db.transactions.forEach(t => {
+                if(!memberStats[t.member]) memberStats[t.member] = { in:0, out:0 };
+
+                if(t.type === 'pemasukan') {
+                    income += t.amount;
+                    memberStats[t.member].in += t.amount;
+                    incByCategory[t.category] = (incByCategory[t.category] || 0) + t.amount;
+                } else {
+                    expense += t.amount;
+                    memberStats[t.member].out += t.amount;
+                    expByCategory[t.category] = (expByCategory[t.category] || 0) + t.amount;
+                }
+            });
+
+            dashboardChartData = {
+                pemasukan: incByCategory,
+                pengeluaran: expByCategory,
+                gabungan: { 'Total Pemasukan': income, 'Total Pengeluaran': expense }
+            };
+
+            let membersHtml = '';
+            for(const [name, data] of Object.entries(memberStats)) {
+                let avatarHtml = '';
+                let subtitleText = 'Kontribusi';
+                
+                if (name === 'Sistem') {
+                    avatarHtml = `<div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-lg"><i class="fa-solid fa-bullseye"></i></div>`;
+                    subtitleText = 'Alokasi Target';
+                } else {
+                    avatarHtml = `<div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold uppercase">${name.substring(0,2)}</div>`;
+                }
+
+                membersHtml += `
+                    <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 shadow-sm mb-2">
+                        <div class="flex items-center gap-3">
+                            ${avatarHtml}
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">${name}</p>
+                                <p class="text-[10px] text-slate-500">${subtitleText}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-semibold text-emerald-500">+${formatRp(data.in)}</p>
+                            <p class="text-xs font-semibold text-rose-500">-${formatRp(data.out)}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const html = `
+                <div class="bg-gradient-to-br from-brand to-brandDark rounded-3xl p-6 text-white shadow-xl shadow-brand/20 mb-6 relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                    <p class="text-white/80 text-sm font-medium mb-1">Total Saldo Utama</p>
+                    <h2 class="text-3xl font-bold mb-6 tracking-tight">${formatRp(db.balance)}</h2>
+                    <div class="grid grid-cols-2 gap-4 border-t border-white/20 pt-4">
+                        <div>
+                            <p class="text-white/70 text-xs mb-1 flex items-center gap-1"><i class="fa-solid fa-arrow-down bg-white/20 p-1 rounded-full text-[8px]"></i> Pemasukan</p>
+                            <p class="font-semibold text-sm">${formatRp(income)}</p>
+                        </div>
+                        <div>
+                            <p class="text-white/70 text-xs mb-1 flex items-center gap-1"><i class="fa-solid fa-arrow-up bg-white/20 p-1 rounded-full text-[8px]"></i> Pengeluaran</p>
+                            <p class="font-semibold text-sm">${formatRp(expense)}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                        <h3 id="chartTitle" class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                            ${currentChartType === 'gabungan' 
+                                ? '<i class="fa-solid fa-scale-balanced text-indigo-500"></i> Arus Kas (Cash Flow)' 
+                                : '<i class="fa-solid fa-chart-pie text-brand"></i> Persentase Kategori'}
+                        </h3>
+                        <div class="flex bg-slate-200 rounded-xl p-1 w-full sm:w-auto overflow-x-auto shadow-inner">
+                            <button onclick="switchChart('pengeluaran')" id="btnChartOut" class="flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap ${currentChartType === 'pengeluaran' ? 'bg-white shadow text-rose-600' : 'text-slate-900 hover:text-black'}">Pengeluaran</button>
+                            <button onclick="switchChart('pemasukan')" id="btnChartIn" class="flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap ${currentChartType === 'pemasukan' ? 'bg-white shadow text-emerald-600' : 'text-slate-900 hover:text-black'}">Pemasukan</button>
+                            <button onclick="switchChart('gabungan')" id="btnChartMix" class="flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap ${currentChartType === 'gabungan' ? 'bg-white shadow text-indigo-600' : 'text-slate-900 hover:text-black'}">Gabungan</button>
+                        </div>
+                    </div>
+                    <div class="w-full h-48 relative" id="chartWrapper"></div>
+                </div>
+
+                <div class="mb-20">
+                    <h3 class="font-bold text-slate-800 mb-3 text-sm px-1">Ringkasan per Anggota</h3>
+                    ${membersHtml || `<p class="text-center text-slate-400 text-sm py-4">Belum ada data transaksi</p>`}
+                </div>
+            `;
+            document.getElementById('app-container').innerHTML = html;
+            drawDashboardChart();
+        }
+
+        function switchChart(type) {
+            currentChartType = type;
+            const btnOut = document.getElementById('btnChartOut');
+            const btnIn = document.getElementById('btnChartIn');
+            const btnMix = document.getElementById('btnChartMix');
+            const chartTitle = document.getElementById('chartTitle');
+
+            if (chartTitle) {
+                if (type === 'gabungan') {
+                    chartTitle.innerHTML = '<i class="fa-solid fa-scale-balanced text-indigo-500"></i> Arus Kas (Cash Flow)';
+                } else {
+                    chartTitle.innerHTML = '<i class="fa-solid fa-chart-pie text-brand"></i> Persentase Kategori';
+                }
+            }
+
+            if(btnOut && btnIn && btnMix) {
+                btnOut.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-900 hover:text-black';
+                btnIn.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-900 hover:text-black';
+                btnMix.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-900 hover:text-black';
+
+                if (type === 'pengeluaran') btnOut.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap bg-white shadow text-rose-600';
+                else if (type === 'pemasukan') btnIn.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap bg-white shadow text-emerald-600';
+                else if (type === 'gabungan') btnMix.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap bg-white shadow text-indigo-600';
+            }
+            drawDashboardChart();
+        }
+
+        function drawDashboardChart() {
+            const dataObj = dashboardChartData[currentChartType];
+            const labels = Object.keys(dataObj);
+            const data = Object.values(dataObj);
+            const wrapper = document.getElementById('chartWrapper');
+
+            if (data.length === 0 || data.reduce((a, b) => a + b, 0) === 0) {
+                wrapper.innerHTML = `<div class="text-center text-slate-400 text-sm py-16 flex flex-col items-center"><i class="fa-solid fa-chart-pie text-4xl mb-3 text-slate-200 block"></i>Belum ada data ${currentChartType}</div>`;
+                if (currentChart) { currentChart.destroy(); currentChart = null; }
+                return;
+            }
+
+            wrapper.innerHTML = `<canvas id="expenseChart"></canvas>`;
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            if (currentChart) currentChart.destroy();
+            
+            const colors = currentChartType === 'pengeluaran' 
+                ? ['#f43f5e', '#f97316', '#eab308', '#84cc16', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#64748b']
+                : currentChartType === 'pemasukan'
+                    ? ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#06b6d4', '#14b8a6', '#6366f1', '#ec4899', '#94a3b8']
+                    : ['#10b981', '#f43f5e']; 
+
+            currentChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{ data: data, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }]
+                },
+                options: {
+                    cutout: '65%',
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: true, position: 'right', labels: { font: { family: "'Inter', sans-serif", size: 10 }, usePointStyle: true, padding: 12 } },
+                        tooltip: { callbacks: { label: function(context) {
+                            let total = context.chart._metasets[context.datasetIndex].total;
+                            let percentage = Math.round((context.parsed / total) * 100) + '%';
+                            return ` ${context.label}: ${formatRp(context.parsed)} (${percentage})`;
+                        }}}
+                    },
+                    layout: { padding: 0 }
+                }
+            });
+        }
+
+        let currentFilter = 'semua';
+        function renderTransactions() {
+            let filtered = [...db.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            if(currentFilter !== 'semua') filtered = filtered.filter(t => t.type === currentFilter);
+
+            let listHtml = '';
+            filtered.forEach(t => {
+                const isInc = t.type === 'pemasukan';
+                listHtml += `
+                    <div class="bg-white rounded-2xl p-4 mb-3 border border-slate-100 shadow-sm flex items-center justify-between gap-3 relative group">
+                        <div class="flex items-center gap-3 w-full">
+                            <div class="w-12 h-12 rounded-full ${isInc ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'} flex flex-shrink-0 items-center justify-center text-xl">
+                                <i class="fa-solid ${isInc ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold text-sm text-slate-800 truncate">${t.category}</p>
+                                <p class="text-[10px] text-slate-500 flex gap-2 items-center truncate">
+                                    <span><i class="fa-regular fa-calendar mr-1"></i>${formatDate(t.date)}</span>
+                                    <span class="bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">${t.member}</span>
+                                </p>
+                                ${t.desc ? `<p class="text-xs text-slate-400 mt-0.5 truncate">${t.desc}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="text-right flex flex-col items-end gap-1 flex-shrink-0">
+                            <p class="font-bold text-sm ${isInc ? 'text-emerald-500' : 'text-rose-500'}">${isInc ? '+' : '-'}${formatRp(t.amount)}</p>
+                            <div class="flex gap-2">
+                                ${t.image ? `<button onclick="viewImage('${t.image}')" class="text-slate-400 hover:text-blue-500 text-xs bg-slate-50 p-1.5 rounded"><i class="fa-solid fa-image"></i></button>` : ''}
+                                <button onclick="triggerSecureDelete('${t.id}', 'transaction')" class="text-slate-400 hover:text-red-500 text-xs bg-slate-50 p-1.5 rounded"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const html = `
+                <div class="mb-4 flex gap-2 overflow-x-auto hide-scrollbar">
+                    <button onclick="setFilter('semua')" class="px-4 py-1.5 rounded-full text-sm font-semibold transition ${currentFilter === 'semua' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 border border-slate-200'}">Semua</button>
+                    <button onclick="setFilter('pemasukan')" class="px-4 py-1.5 rounded-full text-sm font-semibold transition ${currentFilter === 'pemasukan' ? 'bg-emerald-500 text-white' : 'bg-white text-slate-500 border border-slate-200'}">Pemasukan</button>
+                    <button onclick="setFilter('pengeluaran')" class="px-4 py-1.5 rounded-full text-sm font-semibold transition ${currentFilter === 'pengeluaran' ? 'bg-rose-500 text-white' : 'bg-white text-slate-500 border border-slate-200'}">Pengeluaran</button>
+                </div>
+                <div class="pb-20">
+                    ${listHtml || `<div class="text-center py-10"><i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-3 block"></i><p class="text-slate-400 text-sm">Tidak ada transaksi ditemukan.</p></div>`}
+                </div>
+            `;
+            document.getElementById('app-container').innerHTML = html;
+        }
+
+        function setFilter(f) { currentFilter = f; renderTransactions(); }
+
+        function renderTargets() {
+            let html = `<div class="flex justify-between items-center mb-4"><h2 class="font-bold text-lg text-slate-800">Sinking Funds</h2><button onclick="openModal('addTargetModal')" class="bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-200"><i class="fa-solid fa-plus mr-1"></i> Buat Target</button></div>`;
+            
+            if(db.targets.length === 0) {
+                html += `<div class="text-center py-10 bg-white rounded-2xl border border-slate-100 shadow-sm"><i class="fa-solid fa-piggy-bank text-4xl text-slate-300 mb-3 block"></i><p class="text-slate-400 text-sm">Belum ada target tabungan.</p></div>`;
+            } else {
+                html += `<div class="grid grid-cols-1 gap-4 pb-20">`;
+                db.targets.forEach(t => {
+                    const percent = Math.min(100, Math.round((t.current / t.target) * 100));
+                    html += `
+                        <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm relative overflow-hidden">
+                            <div class="flex justify-between items-start mb-3 relative z-10">
+                                <div>
+                                    <h3 class="font-bold text-slate-800">${t.name}</h3>
+                                    <p class="text-xs text-slate-500 mt-1">${formatRp(t.current)} / ${formatRp(t.target)}</p>
+                                </div>
+                                <button onclick="triggerSecureDelete('${t.id}', 'target')" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                            
+                            <div class="w-full bg-slate-100 rounded-full h-3 mb-4 relative z-10 overflow-hidden">
+                                <div class="bg-blue-500 h-3 rounded-full transition-all duration-1000 relative" style="width: ${percent}%">
+                                    ${percent >= 100 ? '<div class="absolute inset-0 bg-white/30 animate-pulse"></div>' : ''}
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center relative z-10">
+                                <span class="text-xs font-bold ${percent >= 100 ? 'text-emerald-500' : 'text-blue-500'}">${percent}% Terkumpul</span>
+                                <button onclick="openAddFundsModal('${t.id}', '${t.name}')" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-slate-700 transition" ${percent >= 100 ? 'disabled style="opacity:0.5"' : ''}>Isi Dana</button>
+                            </div>
+                            ${percent >= 100 ? '<div class="absolute -right-10 -bottom-10 opacity-5"><i class="fa-solid fa-check-circle text-9xl text-emerald-500"></i></div>' : ''}
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+            document.getElementById('app-container').innerHTML = html;
+        }
+
+        function renderSettings() {
+            let auditHtml = '';
+            if(db.auditLog.length > 0) {
+                const logs = [...db.auditLog].sort((a,b) => b.timestamp - a.timestamp).slice(0,5);
+                logs.forEach(log => {
+                    auditHtml += `
+                        <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl mb-2 text-xs">
+                            <img src="${log.photo}" class="w-10 h-10 rounded-lg object-cover border border-slate-200">
+                            <div>
+                                <p class="font-bold text-rose-600">Aksi: ${log.action}</p>
+                                <p class="text-slate-500 font-mono text-[9px] mt-0.5">${new Date(log.timestamp).toLocaleString('id-ID')}</p>
+                                <p class="text-slate-500 text-[10px] mt-0.5 truncate max-w-[200px]"><i class="fa-solid fa-location-dot"></i> ${log.lat}, ${log.lng}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                auditHtml = `<p class="text-slate-400 text-xs italic text-center py-2">Belum ada riwayat penghapusan.</p>`;
+            }
+
+            const html = `
+                <h2 class="font-bold text-xl text-slate-800 mb-4">Pengaturan & Sistem</h2>
+                
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-4 text-white shadow-lg mb-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-sm"><i class="fa-solid fa-cloud-arrow-up mr-2"></i>Cloud Storage Aktif</h3>
+                        <p class="text-[10px] text-blue-100 mt-1">Data Anda tersimpan aman secara online</p>
+                    </div>
+                    <i class="fa-solid fa-shield-check text-2xl text-white/50"></i>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-4">
+                    <h3 class="font-bold text-sm flex items-center gap-2 mb-3"><i class="fa-solid fa-file-export text-emerald-500"></i> Ekspor & Migrasi</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="downloadBackup()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-3 rounded-xl text-xs font-semibold flex flex-col items-center justify-center gap-2 transition">
+                            <i class="fa-solid fa-download text-lg"></i> Backup Lokal
+                        </button>
+                        <label class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-3 rounded-xl text-xs font-semibold flex flex-col items-center justify-center gap-2 transition cursor-pointer">
+                            <i class="fa-solid fa-upload text-lg"></i> Pulihkan ke Cloud
+                            <input type="file" id="restoreFile" accept=".json" class="hidden" onchange="restoreData(event)">
+                        </label>
+                    </div>
+                    <button onclick="exportToSheetsCSV()" class="w-full mt-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 p-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition">
+                        <i class="fa-solid fa-file-excel"></i> Ekspor ke Sheets (CSV)
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-rose-100 shadow-sm p-4 mb-4">
+                    <h3 class="font-bold text-sm text-rose-600 flex items-center gap-2 mb-3"><i class="fa-solid fa-shield-halved"></i> Audit Keamanan (Log Hapus)</h3>
+                    <p class="text-[10px] text-slate-500 mb-3 leading-tight">Sistem merekam wajah dan lokasi setiap aksi penghapusan untuk mencegah sabotase data oleh pihak tak bertanggung jawab.</p>
+                    <div class="bg-white rounded-xl border border-slate-100">
+                        ${auditHtml}
+                    </div>
+                </div>
+
+                <div class="text-center text-slate-400 text-xs mt-8 pb-10">
+                    <p>Keuangan Keluarga Enterprise v${APP_VERSION}</p>
+                    <p class="font-mono text-[9px] mt-1 text-slate-300">ID: ${userId || 'Menunggu Auth'}</p>
+                </div>
+            `;
+            document.getElementById('app-container').innerHTML = html;
+        }
+
+        /* ==================== TRANSACTIONS & CLOUD SAVING ==================== */
+
+        function updateCategoryOptions() {
+            const type = document.querySelector('input[name="txType"]:checked').value;
+            const select = document.getElementById('txCategory');
+            select.innerHTML = CATEGORIES[type].map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            const dataList = document.getElementById('memberList');
+            const uniqueMembers = [...new Set(db.transactions.map(t => t.member))];
+            dataList.innerHTML = uniqueMembers.map(m => `<option value="${m}">`).join('');
+        }
+
+        function handleImageCompress(event, previewId, nameId) {
+            const file = event.target.files[0];
+            if (!file) return;
+            document.getElementById(nameId).innerText = file.name;
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const scaleSize = 600 / img.width;
+                    canvas.width = 600;
+                    canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                    document.getElementById(previewId).src = compressedBase64;
+                    document.getElementById(previewId).classList.remove('hidden');
+                    document.getElementById('txImageBase64').value = compressedBase64;
+                }
+            }
+        }
+
+        async function saveTransaction(e) {
+            e.preventDefault();
+            if(!userId) return showMsg('Gagal', 'Sistem belum terhubung ke Cloud.');
+
+            const type = document.querySelector('input[name="txType"]:checked').value;
+            const tx = {
+                id: 'tx_' + Date.now(),
+                type,
+                amount: parseInt(document.getElementById('txAmount').value),
+                date: document.getElementById('txDate').value,
+                category: document.getElementById('txCategory').value,
+                member: document.getElementById('txMember').value,
+                desc: document.getElementById('txDesc').value,
+                image: document.getElementById('txImageBase64').value
+            };
+
+            closeModal('addTransactionModal');
+            showMsg('Menyimpan...', 'Mencatat transaksi ke Cloud...');
+
+            await setDoc(doc(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'transactions'), tx.id), tx);
+
+            document.getElementById('txForm').reset();
+            document.getElementById('txImagePreview').classList.add('hidden');
+            document.getElementById('txImageBase64').value = '';
+            document.getElementById('txImageName').innerText = 'Klik untuk upload foto';
+            
+            showMsg('Sukses', 'Transaksi berhasil diamankan ke Cloud Storage!');
+        }
+
+        async function saveTarget(e) {
+            e.preventDefault();
+            if(!userId) return;
+
+            const target = {
+                id: 'tgt_' + Date.now(),
+                name: document.getElementById('targetName').value,
+                target: parseInt(document.getElementById('targetAmount').value),
+                current: 0
+            };
+
+            closeModal('addTargetModal');
+            await setDoc(doc(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'targets'), target.id), target);
+            
+            document.getElementById('targetName').value = '';
+            document.getElementById('targetAmount').value = '';
+            showMsg('Sukses', 'Target tabungan berhasil dibuat di Cloud!');
+        }
+
+        function openAddFundsModal(id, name) {
+            document.getElementById('fundTargetId').value = id;
+            document.getElementById('fundTargetLabel').innerText = name;
+            openModal('addFundsModal');
+        }
+
+        async function processAddFunds(e) {
+            e.preventDefault();
+            if(!userId) return;
+
+            const tId = document.getElementById('fundTargetId').value;
+            const amount = parseInt(document.getElementById('fundAmount').value);
+            const source = document.querySelector('input[name="fundSource"]:checked').value;
+
+            const target = db.targets.find(t => t.id === tId);
+            if(!target) return;
+
+            if(source === 'main') {
+                if(db.balance < amount) {
+                    showMsg('Gagal', 'Saldo utama tidak mencukupi untuk memotong dana.');
+                    return;
+                }
+                const txId = 'tx_' + Date.now();
+                const tx = {
+                    id: txId,
+                    type: 'pengeluaran',
+                    amount: amount,
+                    date: new Date().toISOString().split('T')[0],
+                    category: 'Tabungan Target',
+                    member: 'Sistem',
+                    desc: `Alokasi target: ${target.name}`,
+                    image: ''
+                };
+                await setDoc(doc(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'transactions'), txId), tx);
+            }
+
+            const targetRef = doc(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'targets'), tId);
+            await updateDoc(targetRef, { current: target.current + amount });
+
+            closeModal('addFundsModal');
+            document.getElementById('fundAmount').value = '';
+            showMsg('Sukses', 'Dana berhasil ditambahkan dan tersinkronisasi!');
+        }
+
+        /* ==================== SECURITY (CLOUD DELETE) ==================== */
+        
+        let pendingAction = null;
+        let videoStream = null;
+        let currentLocation = null;
+
+        function triggerSecureDelete(id, type) {
+            pendingAction = { id, type };
+            openModal('securityModal');
+            initSecurityAuth();
+        }
+
+        function cancelSecurityAuth() {
+            closeModal('securityModal');
+            stopCamera();
+            pendingAction = null;
+            currentLocation = null;
+        }
+
+        async function initSecurityAuth() {
+            const btn = document.getElementById('btnAuthDelete');
+            const gpsStatus = document.getElementById('gpsStatus');
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            gpsStatus.innerText = "Mencari...";
+            gpsStatus.classList.replace('text-emerald-500', 'text-orange-500');
+            
+            document.getElementById('authTime').innerText = new Date().toLocaleTimeString('id-ID');
+            setInterval(() => {
+                if(document.getElementById('securityModal').classList.contains('hidden')) return;
+                document.getElementById('authTime').innerText = new Date().toLocaleTimeString('id-ID');
+            }, 1000);
+
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                const videoEl = document.getElementById('securityVideo');
+                videoEl.srcObject = videoStream;
+                videoEl.classList.remove('hidden');
+                document.getElementById('cameraLoading').classList.add('hidden');
+            } catch (err) {
+                cancelSecurityAuth();
+                showMsg('Izin Ditolak', 'Kamera wajib diaktifkan untuk keamanan penghapusan data.');
+                return;
+            }
+
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                        gpsStatus.innerText = "Terkunci";
+                        gpsStatus.classList.replace('text-orange-500', 'text-emerald-500');
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    },
+                    (err) => {
+                        cancelSecurityAuth();
+                        showMsg('GPS Ditolak', 'Lokasi (GPS) wajib diaktifkan untuk otorisasi keamanan.');
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            }
+        }
+
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            document.getElementById('securityVideo').classList.add('hidden');
+            document.getElementById('cameraLoading').classList.remove('hidden');
+        }
+
+        async function executeSecureAction() {
+            if(!pendingAction || !currentLocation || !userId) return;
+            
+            const video = document.getElementById('securityVideo');
+            const canvas = document.getElementById('securityCanvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            const photoBase64 = canvas.toDataURL('image/jpeg', 0.5); 
+
+            const logId = 'log_' + Date.now();
+            const logEntry = {
+                id: logId,
+                targetId: pendingAction.id,
+                action: `Hapus ${pendingAction.type === 'transaction' ? 'Transaksi' : 'Target'}`,
+                photo: photoBase64,
+                lat: currentLocation.lat.toFixed(5),
+                lng: currentLocation.lng.toFixed(5),
+                timestamp: Date.now()
+            };
+
+            cancelSecurityAuth();
+            showMsg('Menghapus...', 'Menghapus data dan menyimpan riwayat ke Cloud...');
+
+            // Save log to Cloud
+            await setDoc(doc(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'auditLog'), logId), logEntry);
+            
+            // Delete actual data from Cloud
+            const collName = pendingAction.type === 'transaction' ? 'transactions' : 'targets';
+            await deleteDoc(doc(firestoreDb, 'artifacts', appId, 'users', userId, collName, pendingAction.id));
+
+            showMsg('Terotorisasi', 'Data berhasil dihapus dari Cloud Storage.');
+            pendingAction = null;
+        }
+
+        /* ==================== MODALS & UTILS ==================== */
+        
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.body.classList.add('modal-active');
+            if(id === 'addTransactionModal') {
+                document.getElementById('txDate').valueAsDate = new Date();
+                updateCategoryOptions();
+            }
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.body.classList.remove('modal-active');
+        }
+        function showMsg(title, text) {
+            document.getElementById('msgTitle').innerText = title;
+            document.getElementById('msgText').innerText = text;
+            const icon = document.getElementById('msgIcon');
+            if(title === 'Gagal' || title === 'Error' || title.includes('Ditolak')) {
+                icon.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
+            } else {
+                icon.innerHTML = '<i class="fa-solid fa-circle-check text-brand"></i>';
+            }
+            document.getElementById('msgModal').classList.remove('hidden');
+        }
+        function closeMsgModal() { document.getElementById('msgModal').classList.add('hidden'); }
+        function viewImage(base64) {
+            document.getElementById('fullImagePreview').src = base64;
+            document.getElementById('imagePreviewModal').classList.remove('hidden');
+        }
+
+        /* ==================== BACKUP / RESTORE / SHEETS ==================== */
+
+        function downloadBackup() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `Backup_Keuangan_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchorElem.click();
+        }
+
+        async function restoreData(event) {
+            const file = event.target.files[0];
+            if (!file || !userId) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if(parsed && parsed.transactions) {
+                        showMsg('Memulihkan...', 'Mohon tunggu, sedang mengunggah data lama ke Cloud.');
+                        
+                        // Push to Cloud
+                        for(const tx of parsed.transactions) {
+                            await setDoc(doc(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'transactions'), tx.id), tx);
+                        }
+                        for(const tg of parsed.targets || []) {
+                            await setDoc(doc(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'targets'), tg.id), tg);
+                        }
+                        for(const log of parsed.auditLog || []) {
+                            await setDoc(doc(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'auditLog'), log.id), log);
+                        }
+                        showMsg('Sukses', 'Data lama berhasil dipulihkan dan tersimpan di Cloud!');
+                    } else {
+                        showMsg('Error', 'File backup tidak valid.');
+                    }
+                } catch(err) {
+                    showMsg('Error', 'Gagal membaca file JSON.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportToSheetsCSV() {
+            if(db.transactions.length === 0) return showMsg('Info', 'Tidak ada data untuk diekspor.');
+            let csvContent = "data:text/csv;charset=utf-8,ID,Tipe,Tanggal,Kategori,Nominal,Anggota,Keterangan\n";
+            db.transactions.forEach(t => {
+                csvContent += `${t.id},${t.type},${t.date},${t.category},${t.amount},${t.member},"${(t.desc || '').replace(/"/g, '""')}"\r\n`;
+            });
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", `Laporan_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // PWA Setup
+        function setupPWA() { /* Manifest injected earlier */ }
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('installBtn');
+            if(installBtn) installBtn.classList.remove('hidden');
+        });
+        async function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') document.getElementById('installBtn').classList.add('hidden');
+                deferredPrompt = null;
+            }
+        }
+
+        /* ==================== EXPORT FUNCTIONS TO WINDOW ==================== */
+        Object.assign(window, {
+            navigate, openModal, closeModal, showMsg, closeMsgModal, viewImage,
+            switchChart, setFilter, updateCategoryOptions, handleImageCompress,
+            saveTransaction, saveTarget, openAddFundsModal, processAddFunds,
+            triggerSecureDelete, cancelSecurityAuth, executeSecureAction,
+            downloadBackup, restoreData, exportToSheetsCSV, installPWA
+        });
+
+        // Initialize Application
+        window.onload = () => {
+            setupPWA();
+            initAuth();
+            navigate('dashboard');
+        };
+
+    </script>
+</body>
+</html>
