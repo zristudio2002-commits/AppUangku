@@ -270,12 +270,27 @@
     <img id="fullImagePreview" src="" class="max-w-full max-h-full rounded-lg shadow-2xl object-contain">
 </div>
 
+<!-- Login Overlay (Wajib untuk Sinkronisasi Cloud) -->
+<div id="loginOverlay" class="fixed inset-0 bg-slate-50 z-[200] flex flex-col items-center justify-center p-6 text-center">
+    <div class="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full border border-slate-100">
+        <div class="w-20 h-20 bg-brand/10 text-brand rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+            <i class="fa-solid fa-cloud"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-800 mb-2">KeuanganKita</h2>
+        <p class="text-slate-500 text-sm mb-8">Login untuk menyinkronkan dan menyimpan data keuangan Anda dengan aman di Cloud.</p>
+        <button onclick="loginGoogle()" class="w-full bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 py-3.5 rounded-xl font-bold transition flex items-center justify-center gap-3">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google">
+            Lanjutkan dengan Google
+        </button>
+    </div>
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    const APP_VERSION = '2.1 (Cloud Enterprise)';
+    const APP_VERSION = '3.0 (Firebase Cloud Sync)';
     let db = { balance: 0, transactions: [], targets: [], auditLog: [] };
     let currentPage = 'dashboard';
 
@@ -284,67 +299,76 @@
         pemasukan: ['Gaji', 'Bonus', 'Bisnis', 'Investasi', 'Hadiah', 'Lainnya']
     };
 
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'keuangan-enterprise';
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-        apiKey: "AIzaSyDummyKeyForGitHubPagesOnly12345",
-        authDomain: "keuangan-kita.firebaseapp.com",
-        projectId: "keuangan-kita"
+    // Konfigurasi Milik Anda
+    const firebaseConfig = {
+        apiKey: "AIzaSyArncujwtR9duvtfhziVFWE--iLnQuprPM",
+        authDomain: "uangku-6ad35.firebaseapp.com",
+        projectId: "uangku-6ad35",
+        storageBucket: "uangku-6ad35.firebasestorage.app",
+        messagingSenderId: "1009211073565",
+        appId: "1:1009211073565:web:82daed108eeccd036452f4",
+        measurementId: "G-JBK4QS9E82"
     };
+
+    // Inisialisasi Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const firestoreDb = getFirestore(app);
     
-    let firebaseApp, auth, firestoreDb, userId;
+    let userId = null;
+    let unsubTransactions, unsubTargets, unsubAudit;
 
-    try {
-        firebaseApp = initializeApp(firebaseConfig);
-        auth = getAuth(firebaseApp);
-        firestoreDb = getFirestore(firebaseApp);
-    } catch (e) {
-        console.error("Firebase init error:", e);
+    // Fungsi Login & Logout Google
+    function loginGoogle() {
+        const provider = new GoogleAuthProvider();
+        signInWithPopup(auth, provider).catch(err => {
+            showMsg('Login Gagal', err.message);
+        });
     }
 
-    async function initAuth() {
-        if (!auth) {
-            userId = 'local_fallback_user';
-            setupRealtimeListeners();
-            return;
-        }
-        try {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
-                userId = userCredential.user.uid;
-            } else {
-                const userCredential = await signInAnonymously(auth);
-                userId = userCredential.user.uid;
-            }
-            setupRealtimeListeners();
-        } catch (err) {
-            console.error("Auth Error:", err);
-            userId = 'local_fallback_user';
-            setupRealtimeListeners();
-        }
+    function logoutGoogle() {
+        signOut(auth).then(() => {
+            db = { balance: 0, transactions: [], targets: [], auditLog: [] };
+            if(unsubTransactions) unsubTransactions();
+            if(unsubTargets) unsubTargets();
+            if(unsubAudit) unsubAudit();
+            document.getElementById('loginOverlay').classList.remove('hidden');
+        });
     }
 
+    // Pantau Status Login (Otomatis tertrigger saat buka web / refresh)
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            userId = user.uid;
+            document.getElementById('loginOverlay').classList.add('hidden');
+            setupRealtimeListeners();
+            navigate('dashboard');
+        } else {
+            userId = null;
+            document.getElementById('loginOverlay').classList.remove('hidden');
+        }
+    });
+
+    // Realtime Sync Database (Otomatis Update UI)
     function setupRealtimeListeners() {
         if (!userId) return;
-        try {
-            onSnapshot(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'transactions'), (snapshot) => {
-                db.transactions = snapshot.docs.map(doc => doc.data());
-                recalculateBalance();
-                if (currentPage === 'dashboard') renderDashboard();
-                if (currentPage === 'transactions') renderTransactions();
-            }, (error) => console.log("Tx offline/error fallback"));
+        
+        unsubTransactions = onSnapshot(collection(firestoreDb, 'users', userId, 'transactions'), (snapshot) => {
+            db.transactions = snapshot.docs.map(doc => doc.data());
+            recalculateBalance();
+            if (currentPage === 'dashboard') renderDashboard();
+            if (currentPage === 'transactions') renderTransactions();
+        });
 
-            onSnapshot(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'targets'), (snapshot) => {
-                db.targets = snapshot.docs.map(doc => doc.data());
-                if (currentPage === 'targets') renderTargets();
-            }, (error) => console.log("Target offline/error fallback"));
+        unsubTargets = onSnapshot(collection(firestoreDb, 'users', userId, 'targets'), (snapshot) => {
+            db.targets = snapshot.docs.map(doc => doc.data());
+            if (currentPage === 'targets') renderTargets();
+        });
 
-            onSnapshot(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'auditLog'), (snapshot) => {
-                db.auditLog = snapshot.docs.map(doc => doc.data());
-                if (currentPage === 'settings') renderSettings();
-            }, (error) => console.log("Audit offline/error fallback"));
-        } catch(e) {
-            console.log("Firestore error");
-        }
+        unsubAudit = onSnapshot(collection(firestoreDb, 'users', userId, 'auditLog'), (snapshot) => {
+            db.auditLog = snapshot.docs.map(doc => doc.data());
+            if (currentPage === 'settings') renderSettings();
+        });
     }
 
     function recalculateBalance() {
@@ -359,6 +383,7 @@
     function formatRp(angka) {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
     }
+    
     function formatDate(dateStr) {
         const options = { day: 'numeric', month: 'short', year: 'numeric' };
         return new Date(dateStr).toLocaleDateString('id-ID', options);
@@ -663,17 +688,25 @@
         } else {
             auditHtml = `<p class="text-slate-400 text-xs italic text-center py-2">Belum ada riwayat penghapusan.</p>`;
         }
+        
+        const cloudStatusHtml = `
+            <div class="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white shadow-lg mb-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-cloud-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">Cloud Tersambung</h3>
+                        <p class="text-[10px] text-emerald-100 mt-0.5">Sbg: ${auth.currentUser?.email || 'User'}</p>
+                    </div>
+                </div>
+                <button onclick="logoutGoogle()" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl text-xs font-bold transition">Logout</button>
+            </div>`;
 
         const html = `
             <h2 class="font-bold text-xl text-slate-800 mb-4">Pengaturan & Sistem</h2>
             
-            <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-4 text-white shadow-lg mb-4 flex items-center justify-between">
-                <div>
-                    <h3 class="font-bold text-sm"><i class="fa-solid fa-cloud-arrow-up mr-2"></i>Cloud Storage Aktif</h3>
-                    <p class="text-[10px] text-blue-100 mt-1">Data Anda tersimpan aman secara online</p>
-                </div>
-                <i class="fa-solid fa-shield-check text-2xl text-white/50"></i>
-            </div>
+            ${cloudStatusHtml}
 
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-4">
                 <h3 class="font-bold text-sm flex items-center gap-2 mb-3"><i class="fa-solid fa-file-export text-emerald-500"></i> Ekspor & Migrasi</h3>
@@ -700,8 +733,7 @@
             </div>
 
             <div class="text-center text-slate-400 text-xs mt-8">
-                <p>Keuangan Keluarga Enterprise v${APP_VERSION}</p>
-                <p class="font-mono text-[9px] mt-1 text-slate-300">ID: ${userId || 'Menunggu Auth'}</p>
+                <p>Keuangan Keluarga ${APP_VERSION}</p>
             </div>
         `;
         document.getElementById('app-container').innerHTML = html;
@@ -733,7 +765,7 @@
                 canvas.height = img.height * scaleSize;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5); 
                 document.getElementById(previewId).src = compressedBase64;
                 document.getElementById(previewId).classList.remove('hidden');
                 document.getElementById('txImageBase64').value = compressedBase64;
@@ -743,7 +775,7 @@
 
     async function saveTransaction(e) {
         e.preventDefault();
-        if(!userId) return showMsg('Gagal', 'Sistem belum siap.');
+        if(!userId) return showMsg('Gagal', 'Anda belum Login!');
 
         const type = document.querySelector('input[name="txType"]:checked').value;
         const tx = {
@@ -758,21 +790,20 @@
         };
 
         closeModal('addTransactionModal');
-        showMsg('Menyimpan...', 'Mencatat transaksi...');
-
-        try {
-            await setDoc(doc(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'transactions'), tx.id), tx);
-        } catch(e) {
-            db.transactions.push(tx);
-            recalculateBalance();
-        }
-
-        document.getElementById('txForm').reset();
-        document.getElementById('txImagePreview').classList.add('hidden');
-        document.getElementById('txImageBase64').value = '';
-        document.getElementById('txImageName').innerText = 'Klik untuk upload foto';
+        showMsg('Menyimpan...', 'Mencatat transaksi ke Cloud...');
         
-        showMsg('Sukses', 'Transaksi berhasil disimpan!');
+        try {
+            await setDoc(doc(collection(firestoreDb, 'users', userId, 'transactions'), tx.id), tx);
+            
+            document.getElementById('txForm').reset();
+            document.getElementById('txImagePreview').classList.add('hidden');
+            document.getElementById('txImageBase64').value = '';
+            document.getElementById('txImageName').innerText = 'Klik untuk upload foto';
+            
+            showMsg('Sukses', 'Transaksi tersimpan di Cloud!');
+        } catch(error) {
+            showMsg('Gagal', 'Tidak dapat menyimpan: ' + error.message);
+        }
     }
 
     async function saveTarget(e) {
@@ -787,15 +818,16 @@
         };
 
         closeModal('addTargetModal');
+        showMsg('Menyimpan...', 'Mencatat target ke Cloud...');
+
         try {
-            await setDoc(doc(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'targets'), target.id), target);
-        } catch(e) {
-            db.targets.push(target);
+            await setDoc(doc(collection(firestoreDb, 'users', userId, 'targets'), target.id), target);
+            document.getElementById('targetName').value = '';
+            document.getElementById('targetAmount').value = '';
+            showMsg('Sukses', 'Target tabungan berhasil dibuat!');
+        } catch(error) {
+            showMsg('Gagal', error.message);
         }
-        
-        document.getElementById('targetName').value = '';
-        document.getElementById('targetAmount').value = '';
-        showMsg('Sukses', 'Target tabungan berhasil dibuat!');
     }
 
     function openAddFundsModal(id, name) {
@@ -815,36 +847,34 @@
         const target = db.targets.find(t => t.id === tId);
         if(!target) return;
 
-        if(source === 'main') {
-            if(db.balance < amount) {
-                showMsg('Gagal', 'Saldo utama tidak mencukupi.');
-                return;
-            }
-            const txId = 'tx_' + Date.now();
-            const tx = {
-                id: txId,
-                type: 'pengeluaran',
-                amount: amount,
-                date: new Date().toISOString().split('T')[0],
-                category: 'Tabungan Target',
-                member: 'Sistem',
-                desc: `Alokasi target: ${target.name}`,
-                image: ''
-            };
-            try {
-                await setDoc(doc(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'transactions'), txId), tx);
-            } catch(e) {}
-        }
-
-        target.current += amount;
-        try {
-            const targetRef = doc(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'targets'), tId);
-            await updateDoc(targetRef, { current: target.current });
-        } catch(e) {}
-
         closeModal('addFundsModal');
-        document.getElementById('fundAmount').value = '';
-        showMsg('Sukses', 'Dana berhasil ditambahkan!');
+        showMsg('Menyimpan...', 'Memproses setor dana...');
+
+        try {
+            if(source === 'main') {
+                if(db.balance < amount) return showMsg('Gagal', 'Saldo utama tidak mencukupi.');
+                const txId = 'tx_' + Date.now();
+                const tx = {
+                    id: txId,
+                    type: 'pengeluaran',
+                    amount: amount,
+                    date: new Date().toISOString().split('T')[0],
+                    category: 'Tabungan Target',
+                    member: 'Sistem',
+                    desc: `Alokasi target: ${target.name}`,
+                    image: ''
+                };
+                await setDoc(doc(collection(firestoreDb, 'users', userId, 'transactions'), txId), tx);
+            }
+
+            target.current += amount;
+            await updateDoc(doc(firestoreDb, 'users', userId, 'targets', tId), { current: target.current });
+            
+            document.getElementById('fundAmount').value = '';
+            showMsg('Sukses', 'Dana berhasil ditambahkan ke Cloud!');
+        } catch(err) {
+            showMsg('Error', 'Gagal memproses dana: ' + err.message);
+        }
     }
 
     let pendingAction = null;
@@ -944,26 +974,17 @@
         };
 
         cancelSecurityAuth();
-        showMsg('Menghapus...', 'Menghapus data...');
+        showMsg('Menghapus...', 'Menghapus data dari Cloud...');
 
         try {
-            await setDoc(doc(collection(firestoreDb, 'artifacts', appId, 'users', userId, 'auditLog'), logId), logEntry);
+            await setDoc(doc(collection(firestoreDb, 'users', userId, 'auditLog'), logId), logEntry);
             const collName = pendingAction.type === 'transaction' ? 'transactions' : 'targets';
-            await deleteDoc(doc(firestoreDb, 'artifacts', appId, 'users', userId, collName, pendingAction.id));
-        } catch(e) {
-            if(pendingAction.type === 'transaction') {
-                db.transactions = db.transactions.filter(t => t.id !== pendingAction.id);
-                recalculateBalance();
-            } else {
-                db.targets = db.targets.filter(t => t.id !== pendingAction.id);
-            }
+            await deleteDoc(doc(firestoreDb, 'users', userId, collName, pendingAction.id));
+            showMsg('Terotorisasi', 'Data berhasil dihapus dari Cloud.');
+        } catch(err) {
+            showMsg('Gagal', 'Terjadi kesalahan: ' + err.message);
         }
-
-        showMsg('Terotorisasi', 'Data berhasil dihapus.');
         pendingAction = null;
-        if(currentPage === 'dashboard') renderDashboard();
-        if(currentPage === 'transactions') renderTransactions();
-        if(currentPage === 'targets') renderTargets();
     }
 
     function openModal(id) {
@@ -1011,10 +1032,16 @@
             try {
                 const parsed = JSON.parse(e.target.result);
                 if(parsed && parsed.transactions) {
-                    db = parsed;
-                    recalculateBalance();
-                    showMsg('Sukses', 'Data berhasil dipulihkan!');
-                    navigate(currentPage);
+                    showMsg('Memulihkan...', 'Mengunggah backup ke Cloud. Mohon tunggu...');
+                    
+                    for(const tx of parsed.transactions) {
+                        await setDoc(doc(collection(firestoreDb, 'users', userId, 'transactions'), tx.id), tx);
+                    }
+                    for(const tgt of (parsed.targets || [])) {
+                        await setDoc(doc(collection(firestoreDb, 'users', userId, 'targets'), tgt.id), tgt);
+                    }
+                    
+                    showMsg('Sukses', 'Data lokal berhasil diunggah ke Cloud!');
                 } else {
                     showMsg('Error', 'File backup tidak valid.');
                 }
@@ -1046,6 +1073,7 @@
         const installBtn = document.getElementById('installBtn');
         if(installBtn) installBtn.classList.remove('hidden');
     });
+    
     async function installPWA() {
         if (deferredPrompt) {
             deferredPrompt.prompt();
@@ -1055,18 +1083,16 @@
         }
     }
 
+    // Assign semua fungsi ke window agar dapat diakses dari HTML attribute (karena type="module")
     Object.assign(window, {
         navigate, openModal, closeModal, showMsg, closeMsgModal, viewImage,
         switchChart, setFilter, updateCategoryOptions, handleImageCompress,
         saveTransaction, saveTarget, openAddFundsModal, processAddFunds,
         triggerSecureDelete, cancelSecurityAuth, executeSecureAction,
-        downloadBackup, restoreData, exportToSheetsCSV, installPWA
+        downloadBackup, restoreData, exportToSheetsCSV, installPWA,
+        loginGoogle, logoutGoogle
     });
 
-    window.onload = () => {
-        initAuth();
-        navigate('dashboard');
-    };
 </script>
 
 </body>
