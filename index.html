@@ -952,6 +952,9 @@
     async function executeSecureAction() {
         if(!pendingAction || !userId) return;
         
+        // Simpan data target ke variabel lokal sebelum 'pendingAction' direset oleh cancelSecurityAuth
+        const actionData = { ...pendingAction };
+        
         const video = document.getElementById('securityVideo');
         const canvas = document.getElementById('securityCanvas');
         let photoBase64 = "";
@@ -965,8 +968,8 @@
         const logId = 'log_' + Date.now();
         const logEntry = {
             id: logId,
-            targetId: pendingAction.id,
-            action: `Hapus ${pendingAction.type === 'transaction' ? 'Transaksi' : 'Target'}`,
+            targetId: actionData.id,
+            action: `Hapus ${actionData.type === 'transaction' ? 'Transaksi' : 'Target'}`,
             photo: photoBase64,
             lat: currentLocation ? currentLocation.lat.toFixed(5) : '0',
             lng: currentLocation ? currentLocation.lng.toFixed(5) : '0',
@@ -978,13 +981,12 @@
 
         try {
             await setDoc(doc(collection(firestoreDb, 'users', userId, 'auditLog'), logId), logEntry);
-            const collName = pendingAction.type === 'transaction' ? 'transactions' : 'targets';
-            await deleteDoc(doc(firestoreDb, 'users', userId, collName, pendingAction.id));
+            const collName = actionData.type === 'transaction' ? 'transactions' : 'targets';
+            await deleteDoc(doc(firestoreDb, 'users', userId, collName, actionData.id));
             showMsg('Terotorisasi', 'Data berhasil dihapus dari Cloud.');
         } catch(err) {
             showMsg('Gagal', 'Terjadi kesalahan: ' + err.message);
         }
-        pendingAction = null;
     }
 
     function openModal(id) {
