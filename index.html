@@ -270,6 +270,39 @@
     <img id="fullImagePreview" src="" class="max-w-full max-h-full rounded-lg shadow-2xl object-contain">
 </div>
 
+<!-- MODAL PREVIEW AUDIT LOG -->
+<div id="auditPreviewModal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl">
+        <div class="bg-rose-500 p-4 flex justify-between items-center text-white">
+            <h3 class="font-bold text-lg"><i class="fa-solid fa-shield-halved mr-2"></i>Detail Log Keamanan</h3>
+            <button onclick="closeModal('auditPreviewModal')" class="text-white/80 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <div class="p-0 border-b border-slate-100">
+            <img id="auditPreviewImg" src="" class="w-full aspect-video object-cover bg-slate-100" alt="Bukti Foto">
+        </div>
+        <div class="p-5 space-y-4">
+            <div>
+                <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">Aksi Penghapusan</p>
+                <p id="auditPreviewAction" class="font-bold text-rose-600 text-sm"></p>
+            </div>
+            <div>
+                <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">Data Yang Dihapus</p>
+                <p id="auditPreviewData" class="font-medium text-slate-800 text-sm bg-slate-50 p-3 rounded-xl border border-slate-100"></p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div>
+                    <p class="text-slate-500 font-semibold mb-1 flex items-center gap-1"><i class="fa-solid fa-clock text-blue-400"></i> Waktu</p>
+                    <p id="auditPreviewTime" class="font-mono font-medium text-slate-700 text-[10px]"></p>
+                </div>
+                <div>
+                    <p class="text-slate-500 font-semibold mb-1 flex items-center gap-1"><i class="fa-solid fa-location-dot text-red-400"></i> GPS</p>
+                    <p id="auditPreviewGps" class="font-mono font-medium text-slate-700 text-[10px] truncate"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Login Overlay (Wajib untuk Sinkronisasi Cloud) -->
 <div id="loginOverlay" class="fixed inset-0 bg-slate-50 z-[200] flex flex-col items-center justify-center p-6 text-center">
     <div class="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full border border-slate-100">
@@ -675,13 +708,14 @@
             const logs = [...db.auditLog].sort((a,b) => b.timestamp - a.timestamp).slice(0,5);
             logs.forEach(log => {
                 auditHtml += `
-                    <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl mb-2 text-xs">
-                        <img src="${log.photo}" class="w-10 h-10 rounded-lg object-cover border border-slate-200">
-                        <div>
-                            <p class="font-bold text-rose-600">Aksi: ${log.action}</p>
-                            <p class="text-slate-500 font-mono text-[9px] mt-0.5">${new Date(log.timestamp).toLocaleString('id-ID')}</p>
-                            <p class="text-slate-500 text-[10px] mt-0.5 truncate max-w-[200px]"><i class="fa-solid fa-location-dot"></i> ${log.lat}, ${log.lng}</p>
+                    <div onclick="viewAuditLog('${log.id}')" class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl mb-2 text-xs cursor-pointer hover:bg-rose-50 hover:border-rose-200 border border-transparent transition group">
+                        <img src="${log.photo}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-rose-600 truncate">${log.action}</p>
+                            <p class="text-slate-700 font-medium text-[10px] mt-0.5 truncate">${log.details || 'Lihat detail data...'}</p>
+                            <p class="text-slate-500 font-mono text-[9px] mt-1">${new Date(log.timestamp).toLocaleString('id-ID')}</p>
                         </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-rose-400 transition"></i>
                     </div>
                 `;
             });
@@ -955,6 +989,17 @@
         // Simpan data target ke variabel lokal sebelum 'pendingAction' direset oleh cancelSecurityAuth
         const actionData = { ...pendingAction };
         
+        // --- MENYIMPAN DETAIL DATA YANG DIHAPUS UNTUK PREVIEW LOG ---
+        let deletedDetails = "Data tidak diketahui (versi lama)";
+        if (actionData.type === 'transaction') {
+            const tx = db.transactions.find(t => t.id === actionData.id);
+            if (tx) deletedDetails = `${tx.type === 'pemasukan' ? '+' : '-'}${formatRp(tx.amount)} | ${tx.category} (${tx.member})`;
+        } else if (actionData.type === 'target') {
+            const tgt = db.targets.find(t => t.id === actionData.id);
+            if (tgt) deletedDetails = `Target: ${tgt.name} | Terkumpul: ${formatRp(tgt.current)}`;
+        }
+        // -------------------------------------------------------------
+        
         const video = document.getElementById('securityVideo');
         const canvas = document.getElementById('securityCanvas');
         let photoBase64 = "";
@@ -970,6 +1015,7 @@
             id: logId,
             targetId: actionData.id,
             action: `Hapus ${actionData.type === 'transaction' ? 'Transaksi' : 'Target'}`,
+            details: deletedDetails, // Simpan detail ke database
             photo: photoBase64,
             lat: currentLocation ? currentLocation.lat.toFixed(5) : '0',
             lng: currentLocation ? currentLocation.lng.toFixed(5) : '0',
@@ -1016,6 +1062,19 @@
     function viewImage(base64) {
         document.getElementById('fullImagePreview').src = base64;
         document.getElementById('imagePreviewModal').classList.remove('hidden');
+    }
+
+    function viewAuditLog(logId) {
+        const log = db.auditLog.find(l => l.id === logId);
+        if(!log) return;
+        
+        document.getElementById('auditPreviewImg').src = log.photo || '';
+        document.getElementById('auditPreviewAction').innerText = log.action;
+        document.getElementById('auditPreviewData').innerText = log.details || 'Detail tidak terekam pada versi aplikasi lama.';
+        document.getElementById('auditPreviewTime').innerText = new Date(log.timestamp).toLocaleString('id-ID');
+        document.getElementById('auditPreviewGps').innerText = `${log.lat}, ${log.lng}`;
+        
+        openModal('auditPreviewModal');
     }
 
     function downloadBackup() {
@@ -1092,7 +1151,7 @@
         saveTransaction, saveTarget, openAddFundsModal, processAddFunds,
         triggerSecureDelete, cancelSecurityAuth, executeSecureAction,
         downloadBackup, restoreData, exportToSheetsCSV, installPWA,
-        loginGoogle, logoutGoogle
+        loginGoogle, logoutGoogle, viewAuditLog
     });
 
 </script>
