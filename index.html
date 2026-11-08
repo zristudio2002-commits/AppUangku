@@ -12,6 +12,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -27,10 +28,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .dark .glass { background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(255,255,255,0.05); }
         .modal-active { overflow: hidden; }
         video { transform: scaleX(-1); }
         .page-content { animation: fadeIn 0.3s ease-out; }
@@ -40,15 +42,20 @@
         @media print {
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
-            #printArea { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 20px; }
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; background: white !important; color: black !important; padding: 20px; }
             .no-print { display: none !important; }
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 antialiased selection:bg-brand selection:text-white">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 antialiased selection:bg-brand selection:text-white transition-colors duration-300">
+
+<!-- Inisialisasi Dark Mode Cepat -->
+<script>
+    if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+</script>
 
 <!-- Top App Bar -->
-<header class="bg-brand text-white shadow-md sticky top-0 z-30 no-print">
+<header class="bg-brand dark:bg-slate-800 text-white shadow-md sticky top-0 z-30 no-print transition-colors duration-300 border-b border-transparent dark:border-slate-700">
     <div class="px-4 py-4 flex justify-between items-center max-w-2xl mx-auto">
         <h1 class="text-xl font-bold flex items-center gap-2">
             <i class="fa-solid fa-wallet"></i> KeuanganKita
@@ -67,28 +74,28 @@
 </main>
 
 <!-- Bottom Navigation -->
-<nav class="fixed bottom-0 left-0 right-0 w-full glass border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-30 no-print">
+<nav class="fixed bottom-0 left-0 right-0 w-full glass shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] dark:shadow-none z-30 no-print transition-colors duration-300">
     <div class="max-w-2xl mx-auto flex justify-around items-center py-2 relative">
-        <button onclick="navigate('dashboard')" class="nav-btn flex flex-col items-center p-2 w-16 text-slate-400 hover:text-brand transition" data-target="dashboard">
+        <button onclick="navigate('dashboard')" class="nav-btn flex flex-col items-center p-2 w-16 text-slate-400 dark:text-slate-500 hover:text-brand dark:hover:text-brand transition" data-target="dashboard">
             <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
             <span class="text-[10px] font-medium">Dasbor</span>
         </button>
-        <button onclick="navigate('transactions')" class="nav-btn flex flex-col items-center p-2 w-16 text-slate-400 hover:text-brand transition" data-target="transactions">
+        <button onclick="navigate('transactions')" class="nav-btn flex flex-col items-center p-2 w-16 text-slate-400 dark:text-slate-500 hover:text-brand dark:hover:text-brand transition" data-target="transactions">
             <i class="fa-solid fa-list text-xl mb-1"></i>
             <span class="text-[10px] font-medium">Riwayat</span>
         </button>
         
         <div class="relative -top-6">
-            <button onclick="openModal('addTransactionModal')" class="bg-brand hover:bg-brandDark text-white w-14 h-14 rounded-full shadow-lg shadow-brand/40 flex items-center justify-center text-2xl transition transform hover:scale-105 active:scale-95 border-4 border-[#f8fafc]">
+            <button onclick="openModal('addTransactionModal')" class="bg-brand hover:bg-brandDark text-white w-14 h-14 rounded-full shadow-lg shadow-brand/40 flex items-center justify-center text-2xl transition transform hover:scale-105 active:scale-95 border-4 border-[#f8fafc] dark:border-slate-900">
                 <i class="fa-solid fa-plus"></i>
             </button>
         </div>
 
-        <button onclick="navigate('targets')" class="nav-btn flex flex-col items-center p-2 w-16 text-slate-400 hover:text-brand transition" data-target="targets">
+        <button onclick="navigate('targets')" class="nav-btn flex flex-col items-center p-2 w-16 text-slate-400 dark:text-slate-500 hover:text-brand dark:hover:text-brand transition" data-target="targets">
             <i class="fa-solid fa-bullseye text-xl mb-1"></i>
             <span class="text-[10px] font-medium">Target</span>
         </button>
-        <button onclick="navigate('settings')" class="nav-btn flex flex-col items-center p-2 w-16 text-slate-400 hover:text-brand transition" data-target="settings">
+        <button onclick="navigate('settings')" class="nav-btn flex flex-col items-center p-2 w-16 text-slate-400 dark:text-slate-500 hover:text-brand dark:hover:text-brand transition" data-target="settings">
             <i class="fa-solid fa-shield-halved text-xl mb-1"></i>
             <span class="text-[10px] font-medium">Sistem</span>
         </button>
@@ -98,32 +105,32 @@
 <!-- ==================== MODALS ==================== -->
 
 <div id="msgModal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl" id="msgModalContent">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-transparent dark:border-slate-700" id="msgModalContent">
         <div class="text-center">
             <div id="msgIcon" class="text-4xl mb-3 text-brand"><i class="fa-solid fa-circle-info"></i></div>
-            <h3 id="msgTitle" class="text-lg font-bold mb-2">Informasi</h3>
-            <p id="msgText" class="text-slate-600 mb-6 text-sm"></p>
+            <h3 id="msgTitle" class="text-lg font-bold mb-2 dark:text-white">Informasi</h3>
+            <p id="msgText" class="text-slate-600 dark:text-slate-400 mb-6 text-sm"></p>
             <button onclick="closeMsgModal()" class="w-full bg-brand text-white py-3 rounded-xl font-semibold hover:bg-brandDark transition">Tutup</button>
         </div>
     </div>
 </div>
 
 <div id="securityModal" class="fixed inset-0 bg-black/90 z-[90] hidden flex-col items-center justify-center p-4 backdrop-blur-md">
-    <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-transparent dark:border-slate-700">
         <div class="bg-red-500 p-4 text-white text-center">
             <h3 class="font-bold text-lg"><i class="fa-solid fa-lock mr-2"></i>Otorisasi Keamanan</h3>
             <p class="text-xs opacity-90">Penghapusan data wajib melampirkan foto wajah & lokasi</p>
         </div>
         <div class="p-5 flex flex-col items-center gap-4">
-            <div class="relative w-full aspect-square bg-slate-100 rounded-2xl overflow-hidden shadow-inner border-2 border-dashed border-slate-300">
+            <div class="relative w-full aspect-square bg-slate-100 dark:bg-slate-900 rounded-2xl overflow-hidden shadow-inner border-2 border-dashed border-slate-300 dark:border-slate-700">
                 <video id="securityVideo" class="w-full h-full object-cover hidden" autoplay playsinline></video>
-                <div id="cameraLoading" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                <div id="cameraLoading" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
                     <i class="fa-solid fa-camera animate-pulse text-3xl mb-2"></i>
                     <span class="text-sm font-medium">Menghidupkan Kamera...</span>
                 </div>
             </div>
             
-            <div class="w-full text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <div class="w-full text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
                 <div class="flex justify-between mb-1">
                     <span><i class="fa-solid fa-location-dot mr-1 text-red-400"></i> Lokasi GPS:</span>
                     <span id="gpsStatus" class="font-mono font-medium text-orange-500">Mencari...</span>
@@ -135,7 +142,7 @@
             </div>
 
             <div class="flex w-full gap-3 mt-2">
-                <button onclick="cancelSecurityAuth()" class="flex-1 py-3 bg-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-300 transition">Batal</button>
+                <button onclick="cancelSecurityAuth()" class="flex-1 py-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 transition">Batal</button>
                 <button id="btnAuthDelete" disabled onclick="executeSecureAction()" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition opacity-50 cursor-not-allowed flex justify-center items-center gap-2">
                     <i class="fa-solid fa-fingerprint"></i> Hapus Data
                 </button>
@@ -146,64 +153,64 @@
 </div>
 
 <div id="addTransactionModal" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-end sm:items-center justify-center backdrop-blur-sm sm:p-4">
-    <div class="bg-white w-full max-w-md sm:rounded-3xl rounded-t-3xl h-[85vh] sm:h-auto flex flex-col shadow-2xl" id="txModalContent">
-        <div class="p-4 border-b flex justify-between items-center sticky top-0 bg-white sm:rounded-t-3xl z-10">
-            <h2 class="font-bold text-lg">Catat Transaksi</h2>
-            <button onclick="closeModal('addTransactionModal')" class="w-8 h-8 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200"><i class="fa-solid fa-xmark"></i></button>
+    <div class="bg-white dark:bg-slate-800 w-full max-w-md sm:rounded-3xl rounded-t-3xl h-[85vh] sm:h-auto flex flex-col shadow-2xl border border-transparent dark:border-slate-700" id="txModalContent">
+        <div class="p-4 border-b dark:border-slate-700 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-800 sm:rounded-t-3xl z-10">
+            <h2 class="font-bold text-lg dark:text-white">Catat Transaksi</h2>
+            <button onclick="closeModal('addTransactionModal')" class="w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="p-5 overflow-y-auto hide-scrollbar pb-24">
             <form id="txForm" onsubmit="saveTransaction(event)">
-                <div class="flex bg-slate-100 p-1 rounded-xl mb-4">
+                <div class="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl mb-4 border border-transparent dark:border-slate-700">
                     <label class="flex-1 text-center relative cursor-pointer">
                         <input type="radio" name="txType" value="pengeluaran" class="peer sr-only" checked onchange="updateCategoryOptions()">
-                        <div class="py-2 text-sm font-medium rounded-lg peer-checked:bg-white peer-checked:text-rose-600 peer-checked:shadow-sm transition">Pengeluaran</div>
+                        <div class="py-2 text-sm font-medium rounded-lg peer-checked:bg-white dark:peer-checked:bg-slate-800 peer-checked:text-rose-600 dark:peer-checked:text-rose-500 peer-checked:shadow-sm dark:text-slate-400 transition">Pengeluaran</div>
                     </label>
                     <label class="flex-1 text-center relative cursor-pointer">
                         <input type="radio" name="txType" value="pemasukan" class="peer sr-only" onchange="updateCategoryOptions()">
-                        <div class="py-2 text-sm font-medium rounded-lg peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm transition">Pemasukan</div>
+                        <div class="py-2 text-sm font-medium rounded-lg peer-checked:bg-white dark:peer-checked:bg-slate-800 peer-checked:text-emerald-600 dark:peer-checked:text-emerald-500 peer-checked:shadow-sm dark:text-slate-400 transition">Pemasukan</div>
                     </label>
                 </div>
 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-500 mb-1">Nominal (Rp)</label>
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Nominal (Rp)</label>
                         <div class="relative">
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">Rp</span>
-                            <input type="number" id="txAmount" required placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 font-bold text-lg outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition">
+                            <input type="number" id="txAmount" required placeholder="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-12 pr-4 font-bold text-lg outline-none focus:border-brand dark:focus:border-brand dark:text-white transition">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-500 mb-1">Tanggal</label>
-                            <input type="date" id="txDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-brand">
+                            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Tanggal</label>
+                            <input type="date" id="txDate" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm outline-none focus:border-brand dark:text-white dark:[color-scheme:dark]">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-500 mb-1">Kategori</label>
-                            <select id="txCategory" required class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-brand appearance-none">
+                            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Kategori</label>
+                            <select id="txCategory" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm outline-none focus:border-brand appearance-none dark:text-white">
                             </select>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-500 mb-1">Anggota (Tim/Keluarga)</label>
-                        <input type="text" id="txMember" list="memberList" required placeholder="Cth: Ayah, Ibu, Anak" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-brand" autocomplete="off">
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Anggota (Tim/Keluarga)</label>
+                        <input type="text" id="txMember" list="memberList" required placeholder="Cth: Ayah, Ibu, Anak" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm outline-none focus:border-brand dark:text-white" autocomplete="off">
                         <datalist id="memberList"></datalist>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-500 mb-1">Keterangan</label>
-                        <input type="text" id="txDesc" placeholder="Beli makan siang..." class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-brand">
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Keterangan</label>
+                        <input type="text" id="txDesc" placeholder="Beli makan siang..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm outline-none focus:border-brand dark:text-white">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-500 mb-1">Lampiran Foto/Struk (Otomatis Kompres)</label>
-                        <div class="relative border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:bg-slate-50 transition cursor-pointer" onclick="document.getElementById('txImage').click()">
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Lampiran Foto/Struk (Otomatis Kompres)</label>
+                        <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-4 text-center hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer" onclick="document.getElementById('txImage').click()">
                             <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2"></i>
-                            <p class="text-xs text-slate-500 font-medium" id="txImageName">Klik untuk upload foto</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium" id="txImageName">Klik untuk upload foto</p>
                             <input type="file" id="txImage" accept="image/*" class="hidden" onchange="handleImageCompress(event, 'txImagePreview', 'txImageName')">
                         </div>
-                        <img id="txImagePreview" src="" class="hidden mt-2 rounded-lg max-h-32 mx-auto shadow-sm border">
+                        <img id="txImagePreview" src="" class="hidden mt-2 rounded-lg max-h-32 mx-auto shadow-sm border dark:border-slate-700">
                         <input type="hidden" id="txImageBase64">
                     </div>
                 </div>
@@ -215,19 +222,19 @@
 </div>
 
 <div id="addTargetModal" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-transparent dark:border-slate-700">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="font-bold text-lg">Target Tabungan Baru</h2>
-            <button onclick="closeModal('addTargetModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            <h2 class="font-bold text-lg dark:text-white">Target Tabungan Baru</h2>
+            <button onclick="closeModal('addTargetModal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <form onsubmit="saveTarget(event)" class="space-y-4">
             <div>
-                <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Target</label>
-                <input type="text" id="targetName" required placeholder="Cth: Beli Laptop Baru" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-blue-500">
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Nama Target</label>
+                <input type="text" id="targetName" required placeholder="Cth: Beli Laptop Baru" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 outline-none focus:border-blue-500 dark:text-white">
             </div>
             <div>
-                <label class="block text-xs font-semibold text-slate-500 mb-1">Target Dana (Rp)</label>
-                <input type="number" id="targetAmount" required placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-blue-500">
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Target Dana (Rp)</label>
+                <input type="number" id="targetAmount" required placeholder="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 outline-none focus:border-blue-500 dark:text-white">
             </div>
             <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mt-2 hover:bg-blue-700 transition">Buat Target</button>
         </form>
@@ -235,44 +242,69 @@
 </div>
 
 <div id="addFundsModal" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-transparent dark:border-slate-700">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="font-bold text-lg">Tambah Dana Target</h2>
-            <button onclick="closeModal('addFundsModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            <h2 class="font-bold text-lg dark:text-white">Tambah Dana Target</h2>
+            <button onclick="closeModal('addFundsModal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <form onsubmit="processAddFunds(event)" class="space-y-4">
             <input type="hidden" id="fundTargetId">
-            <div class="bg-blue-50 p-3 rounded-xl mb-4">
-                <p class="text-xs text-blue-600 font-semibold mb-1">Target:</p>
-                <p id="fundTargetLabel" class="font-bold text-sm text-blue-900"></p>
+            <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-xl mb-4 border border-transparent dark:border-blue-800/50">
+                <p class="text-xs text-blue-600 dark:text-blue-400 font-semibold mb-1">Target:</p>
+                <p id="fundTargetLabel" class="font-bold text-sm text-blue-900 dark:text-blue-200"></p>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-slate-500 mb-1">Nominal (Rp)</label>
-                <input type="number" id="fundAmount" required placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-blue-500">
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Nominal (Rp)</label>
+                <input type="number" id="fundAmount" required placeholder="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 outline-none focus:border-blue-500 dark:text-white">
             </div>
             <div>
                 <div class="flex justify-between items-center mb-2">
-                    <label class="text-xs font-semibold text-slate-500">Sumber Dana</label>
-                    <span id="modalBalanceInfo" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Saldo: Rp 0</span>
+                    <label class="text-xs font-semibold text-slate-500 dark:text-slate-400">Sumber Dana</label>
+                    <span id="modalBalanceInfo" class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/50">Saldo: Rp 0</span>
                 </div>
                 <div class="space-y-2">
-                    <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50">
+                    <label class="flex items-center p-3 border dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50">
                         <input type="radio" name="fundSource" value="main" checked class="text-brand w-4 h-4 mr-3">
                         <div>
-                            <p class="text-sm font-semibold">Potong Saldo Utama</p>
-                            <p class="text-[10px] text-slate-500">Otomatis tercatat sbg pengeluaran</p>
+                            <p class="text-sm font-semibold dark:text-slate-200">Potong Saldo Utama</p>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400">Otomatis tercatat sbg pengeluaran</p>
                         </div>
                     </label>
-                    <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50">
+                    <label class="flex items-center p-3 border dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50">
                         <input type="radio" name="fundSource" value="new" class="text-brand w-4 h-4 mr-3">
                         <div>
-                            <p class="text-sm font-semibold">Uang Baru (Di luar Saldo)</p>
-                            <p class="text-[10px] text-slate-500">Tidak memotong saldo dompet</p>
+                            <p class="text-sm font-semibold dark:text-slate-200">Uang Baru (Di luar Saldo)</p>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400">Tidak memotong saldo dompet</p>
                         </div>
                     </label>
                 </div>
             </div>
             <button type="submit" class="w-full bg-brand text-white py-3 rounded-xl font-bold mt-2 hover:bg-brandDark transition">Setor Dana</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Anggaran (Budget) Baru -->
+<div id="setBudgetModal" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-transparent dark:border-slate-700">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="font-bold text-lg dark:text-white">Atur Anggaran Bulanan</h2>
+            <button onclick="closeModal('setBudgetModal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Batasi pengeluaran per kategori agar keuangan tetap sehat.</p>
+        <form onsubmit="saveBudget(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Kategori Pengeluaran</label>
+                <select id="budgetCategory" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-sm outline-none focus:border-brand dark:text-white appearance-none">
+                    <!-- Diisi lewat JS -->
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Batas Maksimal (Rp)</label>
+                <input type="number" id="budgetLimit" required placeholder="Cth: 2000000" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 outline-none focus:border-brand dark:text-white">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold mt-2 hover:bg-indigo-700 transition">Simpan Anggaran</button>
+            <button type="button" onclick="deleteBudget()" class="w-full text-rose-500 py-2 text-xs font-bold mt-1 hover:underline">Hapus Anggaran Ini</button>
         </form>
     </div>
 </div>
@@ -283,31 +315,31 @@
 
 <!-- MODAL PREVIEW AUDIT LOG -->
 <div id="auditPreviewModal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-transparent dark:border-slate-700">
         <div class="bg-rose-500 p-4 flex justify-between items-center text-white">
             <h3 class="font-bold text-lg"><i class="fa-solid fa-shield-halved mr-2"></i>Detail Log Keamanan</h3>
             <button onclick="closeModal('auditPreviewModal')" class="text-white/80 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
-        <div class="p-0 border-b border-slate-100">
-            <img id="auditPreviewImg" src="" class="w-full aspect-video object-cover bg-slate-100" alt="Bukti Foto">
+        <div class="p-0 border-b border-slate-100 dark:border-slate-700">
+            <img id="auditPreviewImg" src="" class="w-full aspect-video object-cover bg-slate-100 dark:bg-slate-900" alt="Bukti Foto">
         </div>
         <div class="p-5 space-y-4">
             <div>
-                <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">Aksi Penghapusan</p>
-                <p id="auditPreviewAction" class="font-bold text-rose-600 text-sm"></p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-1">Aksi Penghapusan</p>
+                <p id="auditPreviewAction" class="font-bold text-rose-600 dark:text-rose-500 text-sm"></p>
             </div>
             <div>
-                <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">Data Yang Dihapus</p>
-                <p id="auditPreviewData" class="font-medium text-slate-800 text-sm bg-slate-50 p-3 rounded-xl border border-slate-100"></p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-1">Data Yang Dihapus</p>
+                <p id="auditPreviewData" class="font-medium text-slate-800 dark:text-slate-200 text-sm bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-700"></p>
             </div>
-            <div class="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <div class="grid grid-cols-2 gap-3 text-xs bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
                 <div>
-                    <p class="text-slate-500 font-semibold mb-1 flex items-center gap-1"><i class="fa-solid fa-clock text-blue-400"></i> Waktu</p>
-                    <p id="auditPreviewTime" class="font-mono font-medium text-slate-700 text-[10px]"></p>
+                    <p class="text-slate-500 dark:text-slate-400 font-semibold mb-1 flex items-center gap-1"><i class="fa-solid fa-clock text-blue-400"></i> Waktu</p>
+                    <p id="auditPreviewTime" class="font-mono font-medium text-slate-700 dark:text-slate-300 text-[10px]"></p>
                 </div>
                 <div>
-                    <p class="text-slate-500 font-semibold mb-1 flex items-center gap-1"><i class="fa-solid fa-location-dot text-red-400"></i> GPS</p>
-                    <p id="auditPreviewGps" class="font-mono font-medium text-slate-700 text-[10px] truncate"></p>
+                    <p class="text-slate-500 dark:text-slate-400 font-semibold mb-1 flex items-center gap-1"><i class="fa-solid fa-location-dot text-red-400"></i> GPS</p>
+                    <p id="auditPreviewGps" class="font-mono font-medium text-slate-700 dark:text-slate-300 text-[10px] truncate"></p>
                 </div>
             </div>
         </div>
@@ -315,21 +347,21 @@
 </div>
 
 <!-- Login Overlay -->
-<div id="loginOverlay" class="fixed inset-0 bg-slate-50 z-[200] flex flex-col items-center justify-center p-6 text-center">
-    <div class="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full border border-slate-100">
+<div id="loginOverlay" class="fixed inset-0 bg-slate-50 dark:bg-slate-900 z-[200] flex flex-col items-center justify-center p-6 text-center transition-colors duration-300">
+    <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl max-w-sm w-full border border-slate-100 dark:border-slate-700">
         <div class="w-20 h-20 bg-brand/10 text-brand rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
             <i class="fa-solid fa-cloud"></i>
         </div>
-        <h2 class="text-2xl font-bold text-slate-800 mb-2">KeuanganKita</h2>
-        <p class="text-slate-500 text-sm mb-8">Login untuk menyinkronkan dan menyimpan data keuangan Anda dengan aman di Cloud.</p>
-        <button onclick="loginGoogle()" class="w-full bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 py-3.5 rounded-xl font-bold transition flex items-center justify-center gap-3">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">KeuanganKita</h2>
+        <p class="text-slate-500 dark:text-slate-400 text-sm mb-8">Login untuk menyinkronkan dan menyimpan data keuangan Anda dengan aman di Cloud.</p>
+        <button onclick="loginGoogle()" class="w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 py-3.5 rounded-xl font-bold transition flex items-center justify-center gap-3">
             <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google">
             Lanjutkan dengan Google
         </button>
     </div>
 </div>
 
-<!-- PRINT AREA (Tersembunyi kecuali saat dicetak) -->
+<!-- PRINT AREA -->
 <div id="printArea" class="hidden">
     <div style="text-align: center; margin-bottom: 20px;">
         <h2 style="font-size: 20px; font-weight: bold; margin: 0;">LAPORAN KEUANGAN KELUARGA</h2>
@@ -361,9 +393,14 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    const APP_VERSION = '3.3 (UI Fix & Target Summary)';
-    let db = { balance: 0, transactions: [], targets: [], auditLog: [] };
+    const APP_VERSION = '4.0 (Enterprise: Budget, Dark Mode, Filter)';
+    let db = { balance: 0, transactions: [], targets: [], auditLog: [], budgets: [] };
     let currentPage = 'dashboard';
+
+    // State Filter Tanggal
+    let dateFilterType = 'all'; // all, this_month, last_month, custom
+    let customStartDate = '';
+    let customEndDate = '';
 
     const CATEGORIES = {
         pengeluaran: ['Makanan', 'Transportasi', 'Belanja', 'Tagihan', 'Hiburan', 'Kesehatan', 'Pendidikan', 'Tabungan Target', 'Lainnya'],
@@ -386,7 +423,7 @@
     const firestoreDb = getFirestore(app);
     
     let userId = null;
-    let unsubTransactions, unsubTargets, unsubAudit;
+    let unsubTransactions, unsubTargets, unsubAudit, unsubBudgets;
 
     function loginGoogle() {
         const provider = new GoogleAuthProvider();
@@ -395,10 +432,11 @@
 
     function logoutGoogle() {
         signOut(auth).then(() => {
-            db = { balance: 0, transactions: [], targets: [], auditLog: [] };
+            db = { balance: 0, transactions: [], targets: [], auditLog: [], budgets: [] };
             if(unsubTransactions) unsubTransactions();
             if(unsubTargets) unsubTargets();
             if(unsubAudit) unsubAudit();
+            if(unsubBudgets) unsubBudgets();
             document.getElementById('loginOverlay').classList.remove('hidden');
         });
     }
@@ -434,6 +472,11 @@
             db.auditLog = snapshot.docs.map(doc => doc.data());
             if (currentPage === 'settings') renderSettings();
         });
+
+        unsubBudgets = onSnapshot(collection(firestoreDb, 'users', userId, 'budgets'), (snapshot) => {
+            db.budgets = snapshot.docs.map(doc => doc.data());
+            if (currentPage === 'dashboard') renderDashboard();
+        });
     }
 
     function recalculateBalance() {
@@ -464,9 +507,11 @@
             if(btn.dataset.target === page) {
                 btn.classList.add('text-brand');
                 btn.classList.remove('text-slate-400');
+                btn.classList.remove('dark:text-slate-500');
             } else {
                 btn.classList.remove('text-brand');
                 btn.classList.add('text-slate-400');
+                btn.classList.add('dark:text-slate-500');
             }
         });
 
@@ -513,19 +558,19 @@
             let subtitleText = 'Kontribusi';
             
             if (name === 'Sistem') {
-                avatarHtml = `<div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-lg"><i class="fa-solid fa-bullseye"></i></div>`;
+                avatarHtml = `<div class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500 dark:text-blue-400 text-lg"><i class="fa-solid fa-bullseye"></i></div>`;
                 subtitleText = 'Alokasi Target';
             } else {
-                avatarHtml = `<div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold uppercase">${name.substring(0,2)}</div>`;
+                avatarHtml = `<div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-300 font-bold uppercase">${name.substring(0,2)}</div>`;
             }
 
             membersHtml += `
-                <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 shadow-sm mb-2">
+                <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm mb-2">
                     <div class="flex items-center gap-3">
                         ${avatarHtml}
                         <div>
-                            <p class="text-sm font-bold text-slate-800">${name}</p>
-                            <p class="text-[10px] text-slate-500">${subtitleText}</p>
+                            <p class="text-sm font-bold text-slate-800 dark:text-slate-200">${name}</p>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400">${subtitleText}</p>
                         </div>
                     </div>
                     <div class="text-right">
@@ -534,6 +579,47 @@
                     </div>
                 </div>
             `;
+        }
+
+        // --- SISTEM ANGGARAN (BUDGETS) ---
+        let budgetHtml = '';
+        const now = new Date();
+        const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}`;
+        
+        if (db.budgets && db.budgets.length > 0) {
+            budgetHtml += `<div class="grid grid-cols-1 gap-3">`;
+            db.budgets.forEach(b => {
+                // Hitung pengeluaran di kategori ini pada bulan ini
+                let spent = 0;
+                db.transactions.forEach(t => {
+                    if (t.type === 'pengeluaran' && t.category === b.category && t.date.startsWith(currentMonthStr)) {
+                        spent += t.amount;
+                    }
+                });
+                
+                let percent = Math.min(100, Math.round((spent / b.limit) * 100));
+                let barColor = percent >= 90 ? 'bg-rose-500' : (percent >= 75 ? 'bg-amber-500' : 'bg-indigo-500');
+                let textColor = percent >= 90 ? 'text-rose-500' : 'text-slate-500 dark:text-slate-400';
+
+                budgetHtml += `
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm cursor-pointer hover:border-indigo-200 dark:hover:border-indigo-500/50 transition" onclick="openBudgetModal('${b.category}', ${b.limit})">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200">${b.category}</h4>
+                            <span class="text-xs font-bold ${textColor}">${percent}%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5 mb-2 overflow-hidden">
+                            <div class="${barColor} h-2.5 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                        </div>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 flex justify-between">
+                            <span>Terpakai: ${formatRp(spent)}</span>
+                            <span>Batas: ${formatRp(b.limit)}</span>
+                        </p>
+                    </div>
+                `;
+            });
+            budgetHtml += `</div>`;
+        } else {
+            budgetHtml = `<div class="text-center py-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm"><i class="fa-solid fa-chart-line text-3xl text-slate-300 dark:text-slate-600 mb-2 block"></i><p class="text-slate-400 dark:text-slate-500 text-xs">Belum ada batas anggaran bulan ini.</p></div>`;
         }
 
         const html = `
@@ -553,25 +639,33 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-6">
+            <div class="flex justify-between items-center mb-3 px-1">
+                <h3 class="font-bold text-slate-800 dark:text-slate-200 text-sm">Anggaran Bulan Ini</h3>
+                <button onclick="openBudgetModal()" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"><i class="fa-solid fa-gear mr-1"></i>Atur</button>
+            </div>
+            <div class="mb-6">
+                ${budgetHtml}
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 mb-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                    <h3 id="chartTitle" class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <h3 id="chartTitle" class="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center gap-2">
                         ${currentChartType === 'gabungan' 
                             ? '<i class="fa-solid fa-scale-balanced text-indigo-500"></i> Arus Kas (Cash Flow)' 
                             : '<i class="fa-solid fa-chart-pie text-brand"></i> Persentase Kategori'}
                     </h3>
-                    <div class="flex bg-slate-200 rounded-xl p-1 w-full sm:w-auto overflow-x-auto shadow-inner">
-                        <button onclick="switchChart('pengeluaran')" id="btnChartOut" class="flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-900 ${currentChartType === 'pengeluaran' ? 'bg-white shadow text-rose-600' : 'hover:text-black'}">Pengeluaran</button>
-                        <button onclick="switchChart('pemasukan')" id="btnChartIn" class="flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-900 ${currentChartType === 'pemasukan' ? 'bg-white shadow text-emerald-600' : 'hover:text-black'}">Pemasukan</button>
-                        <button onclick="switchChart('gabungan')" id="btnChartMix" class="flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-900 ${currentChartType === 'gabungan' ? 'bg-white shadow text-indigo-600' : 'hover:text-black'}">Gabungan</button>
+                    <div class="flex bg-slate-100 dark:bg-slate-900 rounded-xl p-1 w-full sm:w-auto overflow-x-auto shadow-inner border border-slate-200 dark:border-slate-800">
+                        <button onclick="switchChart('pengeluaran')" id="btnChartOut" class="flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-600 dark:text-slate-400 ${currentChartType === 'pengeluaran' ? 'bg-white dark:bg-slate-700 shadow text-rose-600 dark:text-rose-400' : 'hover:text-black dark:hover:text-white'}">Pengeluaran</button>
+                        <button onclick="switchChart('pemasukan')" id="btnChartIn" class="flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-600 dark:text-slate-400 ${currentChartType === 'pemasukan' ? 'bg-white dark:bg-slate-700 shadow text-emerald-600 dark:text-emerald-400' : 'hover:text-black dark:hover:text-white'}">Pemasukan</button>
+                        <button onclick="switchChart('gabungan')" id="btnChartMix" class="flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-600 dark:text-slate-400 ${currentChartType === 'gabungan' ? 'bg-white dark:bg-slate-700 shadow text-indigo-600 dark:text-indigo-400' : 'hover:text-black dark:hover:text-white'}">Gabungan</button>
                     </div>
                 </div>
                 <div class="w-full h-48 relative" id="chartWrapper"></div>
             </div>
 
             <div class="mb-6">
-                <h3 class="font-bold text-slate-800 mb-3 text-sm px-1">Ringkasan per Anggota</h3>
-                ${membersHtml || `<p class="text-center text-slate-400 text-sm py-4">Belum ada data transaksi</p>`}
+                <h3 class="font-bold text-slate-800 dark:text-slate-200 mb-3 text-sm px-1">Ringkasan per Anggota</h3>
+                ${membersHtml || `<p class="text-center text-slate-400 dark:text-slate-500 text-sm py-4">Belum ada data transaksi</p>`}
             </div>
         `;
         document.getElementById('app-container').innerHTML = html;
@@ -594,13 +688,13 @@
         }
 
         if(btnOut && btnIn && btnMix) {
-            btnOut.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-900 hover:text-black';
-            btnIn.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-900 hover:text-black';
-            btnMix.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-900 hover:text-black';
+            btnOut.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white';
+            btnIn.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white';
+            btnMix.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white';
 
-            if (type === 'pengeluaran') btnOut.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap bg-white shadow text-rose-600';
-            else if (type === 'pemasukan') btnIn.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap bg-white shadow text-emerald-600';
-            else if (type === 'gabungan') btnMix.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap bg-white shadow text-indigo-600';
+            if (type === 'pengeluaran') btnOut.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap bg-white dark:bg-slate-700 shadow text-rose-600 dark:text-rose-400';
+            else if (type === 'pemasukan') btnIn.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap bg-white dark:bg-slate-700 shadow text-emerald-600 dark:text-emerald-400';
+            else if (type === 'gabungan') btnMix.className = 'flex-1 sm:flex-none text-xs px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap bg-white dark:bg-slate-700 shadow text-indigo-600 dark:text-indigo-400';
         }
         drawDashboardChart();
     }
@@ -610,9 +704,11 @@
         const labels = Object.keys(dataObj);
         const data = Object.values(dataObj);
         const wrapper = document.getElementById('chartWrapper');
+        
+        let textColor = localStorage.getItem('theme') === 'dark' ? '#cbd5e1' : '#64748b';
 
         if (data.length === 0 || data.reduce((a, b) => a + b, 0) === 0) {
-            wrapper.innerHTML = `<div class="text-center text-slate-400 text-sm py-16 flex flex-col items-center"><i class="fa-solid fa-chart-pie text-4xl mb-3 text-slate-200 block"></i>Belum ada data ${currentChartType}</div>`;
+            wrapper.innerHTML = `<div class="text-center text-slate-400 dark:text-slate-600 text-sm py-16 flex flex-col items-center"><i class="fa-solid fa-chart-pie text-4xl mb-3 block opacity-50"></i>Belum ada data ${currentChartType}</div>`;
             if (currentChart) { currentChart.destroy(); currentChart = null; }
             return;
         }
@@ -637,7 +733,7 @@
                 cutout: '65%',
                 maintainAspectRatio: false,
                 plugins: { 
-                    legend: { display: true, position: 'right', labels: { font: { family: "'Inter', sans-serif", size: 10 }, usePointStyle: true, padding: 12 } },
+                    legend: { display: true, position: 'right', labels: { color: textColor, font: { family: "'Inter', sans-serif", size: 10 }, usePointStyle: true, padding: 12 } },
                     tooltip: { callbacks: { label: function(context) {
                         let total = context.chart._metasets[context.datasetIndex].total;
                         let percentage = Math.round((context.parsed / total) * 100) + '%';
@@ -651,29 +747,49 @@
     let currentFilter = 'semua';
     function renderTransactions() {
         let filtered = [...db.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        // 1. Tipe Filter (Pemasukan/Pengeluaran)
         if(currentFilter !== 'semua') filtered = filtered.filter(t => t.type === currentFilter);
+
+        // 2. Filter Tanggal (Date Filter)
+        const now = new Date();
+        if (dateFilterType === 'this_month') {
+            filtered = filtered.filter(t => {
+                let d = new Date(t.date);
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            });
+        } else if (dateFilterType === 'last_month') {
+            let lastMonth = now.getMonth() - 1;
+            let year = now.getFullYear();
+            if (lastMonth < 0) { lastMonth = 11; year--; }
+            filtered = filtered.filter(t => {
+                let d = new Date(t.date);
+                return d.getMonth() === lastMonth && d.getFullYear() === year;
+            });
+        } else if (dateFilterType === 'custom' && customStartDate && customEndDate) {
+            filtered = filtered.filter(t => t.date >= customStartDate && t.date <= customEndDate);
+        }
 
         let listHtml = '';
         filtered.forEach(t => {
             const isInc = t.type === 'pemasukan';
             const isRefund = t.category === 'Refund Saldo' || (t.desc && t.desc.includes('!'));
             
-            // Perbaikan CSS di sini: membatasi kiri dengan flex-1 min-w-0 agar elemen kanan tidak keluar box
             listHtml += `
-                <div class="bg-white rounded-2xl p-4 mb-3 border border-slate-100 shadow-sm flex items-center justify-between gap-3 relative group overflow-hidden">
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 mb-3 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between gap-3 relative group overflow-hidden">
                     <div class="flex items-center gap-3 flex-1 min-w-0">
-                        <div class="w-12 h-12 rounded-full ${isInc ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'} flex flex-shrink-0 items-center justify-center text-xl relative">
+                        <div class="w-12 h-12 rounded-full ${isInc ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500' : 'bg-rose-50 dark:bg-rose-900/30 text-rose-500'} flex flex-shrink-0 items-center justify-center text-xl relative">
                             <i class="fa-solid ${isInc ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}"></i>
                             ${isRefund ? '<span class="absolute -top-1 -right-1 bg-amber-500 text-white w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shadow" title="Pengembalian/Pembatalan">!</span>' : ''}
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="font-bold text-sm text-slate-800 flex items-center gap-1.5 mb-0.5">
+                            <div class="font-bold text-sm text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mb-0.5">
                                 <span class="truncate">${t.category}</span>
-                                ${isRefund ? '<span class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-mono flex-shrink-0 whitespace-nowrap">! Refund</span>' : ''}
+                                ${isRefund ? '<span class="text-[9px] bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 px-1.5 py-0.5 rounded font-mono flex-shrink-0 whitespace-nowrap">! Refund</span>' : ''}
                             </div>
-                            <p class="text-[10px] text-slate-500 flex gap-2 items-center truncate">
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 flex gap-2 items-center truncate">
                                 <span><i class="fa-regular fa-calendar mr-1"></i>${formatDate(t.date)}</span>
-                                <span class="bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">${t.member}</span>
+                                <span class="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-[9px]">${t.member}</span>
                             </p>
                             ${t.desc ? `<p class="text-xs text-slate-400 mt-0.5 truncate">${t.desc}</p>` : ''}
                         </div>
@@ -681,8 +797,8 @@
                     <div class="text-right flex flex-col items-end gap-1 flex-shrink-0 pl-2">
                         <p class="font-bold text-sm ${isInc ? 'text-emerald-500' : 'text-rose-500'}">${isInc ? '+' : '-'}${formatRp(t.amount)}</p>
                         <div class="flex gap-2">
-                            ${t.image ? `<button onclick="viewImage('${t.image}')" class="text-slate-400 hover:text-blue-500 text-xs bg-slate-50 p-1.5 rounded"><i class="fa-solid fa-image"></i></button>` : ''}
-                            <button onclick="triggerSecureDelete('${t.id}', 'transaction')" class="text-slate-400 hover:text-red-500 text-xs bg-slate-50 p-1.5 rounded" title="Hapus Transaksi"><i class="fa-solid fa-trash"></i></button>
+                            ${t.image ? `<button onclick="viewImage('${t.image}')" class="text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 text-xs bg-slate-50 dark:bg-slate-700 p-1.5 rounded"><i class="fa-solid fa-image"></i></button>` : ''}
+                            <button onclick="triggerSecureDelete('${t.id}', 'transaction')" class="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 text-xs bg-slate-50 dark:bg-slate-700 p-1.5 rounded" title="Hapus Transaksi"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
@@ -690,22 +806,53 @@
         });
 
         const html = `
-            <div class="mb-4 flex gap-2 overflow-x-auto hide-scrollbar">
-                <button onclick="setFilter('semua')" class="px-4 py-1.5 rounded-full text-sm font-semibold transition ${currentFilter === 'semua' ? 'bg-slate-800 text-white' : 'bg-white text-slate-500 border border-slate-200'}">Semua</button>
-                <button onclick="setFilter('pemasukan')" class="px-4 py-1.5 rounded-full text-sm font-semibold transition ${currentFilter === 'pemasukan' ? 'bg-emerald-500 text-white' : 'bg-white text-slate-500 border border-slate-200'}">Pemasukan</button>
-                <button onclick="setFilter('pengeluaran')" class="px-4 py-1.5 rounded-full text-sm font-semibold transition ${currentFilter === 'pengeluaran' ? 'bg-rose-500 text-white' : 'bg-white text-slate-500 border border-slate-200'}">Pengeluaran</button>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-3 mb-4 shadow-sm border border-slate-100 dark:border-slate-700">
+                <div class="flex flex-col gap-3">
+                    <div class="flex gap-2 overflow-x-auto hide-scrollbar">
+                        <button onclick="setFilter('semua')" class="px-4 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap ${currentFilter === 'semua' ? 'bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900' : 'bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'}">Semua Tipe</button>
+                        <button onclick="setFilter('pemasukan')" class="px-4 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap ${currentFilter === 'pemasukan' ? 'bg-emerald-500 text-white' : 'bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'}">Pemasukan</button>
+                        <button onclick="setFilter('pengeluaran')" class="px-4 py-1.5 rounded-full text-xs font-semibold transition whitespace-nowrap ${currentFilter === 'pengeluaran' ? 'bg-rose-500 text-white' : 'bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'}">Pengeluaran</button>
+                    </div>
+                    
+                    <div class="flex gap-2 items-center">
+                        <i class="fa-solid fa-filter text-slate-400 text-xs ml-1"></i>
+                        <select id="dateFilterSelect" onchange="updateDateFilter(this.value)" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs rounded-lg px-2 py-1.5 outline-none focus:border-brand">
+                            <option value="all" ${dateFilterType === 'all' ? 'selected' : ''}>Semua Waktu</option>
+                            <option value="this_month" ${dateFilterType === 'this_month' ? 'selected' : ''}>Bulan Ini</option>
+                            <option value="last_month" ${dateFilterType === 'last_month' ? 'selected' : ''}>Bulan Lalu</option>
+                            <option value="custom" ${dateFilterType === 'custom' ? 'selected' : ''}>Rentang Custom...</option>
+                        </select>
+                    </div>
+
+                    <div id="customDateWrap" class="${dateFilterType === 'custom' ? 'flex' : 'hidden'} gap-2 items-center border-t dark:border-slate-700 pt-2">
+                        <input type="date" id="cfStart" value="${customStartDate}" class="flex-1 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded p-1.5 dark:text-white dark:[color-scheme:dark]">
+                        <span class="text-slate-400 text-xs">-</span>
+                        <input type="date" id="cfEnd" value="${customEndDate}" class="flex-1 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded p-1.5 dark:text-white dark:[color-scheme:dark]">
+                        <button onclick="applyCustomDate()" class="bg-brand text-white px-3 py-1.5 rounded text-xs font-bold">Terapkan</button>
+                    </div>
+                </div>
             </div>
+
             <div>
-                ${listHtml || `<div class="text-center py-10"><i class="fa-regular fa-folder-open text-4xl text-slate-300 mb-3 block"></i><p class="text-slate-400 text-sm">Tidak ada transaksi ditemukan.</p></div>`}
+                ${listHtml || `<div class="text-center py-10"><i class="fa-regular fa-folder-open text-4xl text-slate-300 dark:text-slate-600 mb-3 block"></i><p class="text-slate-400 text-sm">Tidak ada transaksi ditemukan.</p></div>`}
             </div>
         `;
         document.getElementById('app-container').innerHTML = html;
     }
 
     function setFilter(f) { currentFilter = f; renderTransactions(); }
+    function updateDateFilter(val) {
+        dateFilterType = val;
+        if (val !== 'custom') renderTransactions();
+        else document.getElementById('customDateWrap').classList.replace('hidden', 'flex');
+    }
+    function applyCustomDate() {
+        customStartDate = document.getElementById('cfStart').value;
+        customEndDate = document.getElementById('cfEnd').value;
+        if(customStartDate && customEndDate) renderTransactions();
+    }
 
     function renderTargets() {
-        // Kalkulasi Summary Keseluruhan Saldo & Persentase Alokasi Target
         let totalAlokasi = 0;
         let totalTargetGoal = 0;
         db.targets.forEach(t => { 
@@ -713,14 +860,11 @@
             totalTargetGoal += t.target; 
         });
         
-        // Total keseluruhan harta (Saldo di dompet + saldo yang diamankan di target)
         let totalAset = db.balance + totalAlokasi;
-        // Berapa persen harta yang ada di dalam target
         let porsiAset = totalAset > 0 ? Math.round((totalAlokasi / totalAset) * 100) : 0;
 
-        let html = `<div class="flex justify-between items-center mb-4"><h2 class="font-bold text-lg text-slate-800">Sinking Funds</h2><button onclick="openModal('addTargetModal')" class="bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-200"><i class="fa-solid fa-plus mr-1"></i> Buat Target</button></div>`;
+        let html = `<div class="flex justify-between items-center mb-4"><h2 class="font-bold text-lg text-slate-800 dark:text-slate-200">Sinking Funds</h2><button onclick="openModal('addTargetModal')" class="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-200 dark:hover:bg-blue-900/50 transition"><i class="fa-solid fa-plus mr-1"></i> Buat Target</button></div>`;
         
-        // --- KARTU RINGKASAN TARGET ---
         html += `
             <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-3xl p-5 text-white shadow-lg mb-6 relative overflow-hidden">
                 <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
@@ -733,30 +877,30 @@
         `;
 
         if(db.targets.length === 0) {
-            html += `<div class="text-center py-10 bg-white rounded-2xl border border-slate-100 shadow-sm"><i class="fa-solid fa-piggy-bank text-4xl text-slate-300 mb-3 block"></i><p class="text-slate-400 text-sm">Belum ada target tabungan.</p></div>`;
+            html += `<div class="text-center py-10 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm"><i class="fa-solid fa-piggy-bank text-4xl text-slate-300 dark:text-slate-600 mb-3 block"></i><p class="text-slate-400 text-sm">Belum ada target tabungan.</p></div>`;
         } else {
             html += `<div class="grid grid-cols-1 gap-4">`;
             db.targets.forEach(t => {
                 const percent = Math.min(100, Math.round((t.current / t.target) * 100));
                 html += `
-                    <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm relative overflow-hidden">
+                    <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden">
                         <div class="flex justify-between items-start mb-3 relative z-10">
                             <div>
-                                <h3 class="font-bold text-slate-800">${t.name}</h3>
-                                <p class="text-xs text-slate-500 mt-1">${formatRp(t.current)} / ${formatRp(t.target)}</p>
+                                <h3 class="font-bold text-slate-800 dark:text-slate-200">${t.name}</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">${formatRp(t.current)} / ${formatRp(t.target)}</p>
                             </div>
-                            <button onclick="triggerSecureDelete('${t.id}', 'target')" class="text-slate-300 hover:text-red-500" title="Hapus Target (Dana kembali ke Saldo)"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="triggerSecureDelete('${t.id}', 'target')" class="text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 transition" title="Hapus Target (Dana kembali ke Saldo)"><i class="fa-solid fa-trash"></i></button>
                         </div>
                         
-                        <div class="w-full bg-slate-100 rounded-full h-3 mb-4 relative z-10 overflow-hidden">
+                        <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 mb-4 relative z-10 overflow-hidden">
                             <div class="bg-blue-500 h-3 rounded-full transition-all duration-1000 relative" style="width: ${percent}%">
                                 ${percent >= 100 ? '<div class="absolute inset-0 bg-white/30 animate-pulse"></div>' : ''}
                             </div>
                         </div>
                         
                         <div class="flex justify-between items-center relative z-10">
-                            <span class="text-xs font-bold ${percent >= 100 ? 'text-emerald-500' : 'text-blue-500'}">${percent}% Terkumpul</span>
-                            <button onclick="openAddFundsModal('${t.id}', '${t.name}')" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-slate-700 transition" ${percent >= 100 ? 'disabled style="opacity:0.5"' : ''}>Isi Dana</button>
+                            <span class="text-xs font-bold ${percent >= 100 ? 'text-emerald-500' : 'text-blue-500 dark:text-blue-400'}">${percent}% Terkumpul</span>
+                            <button onclick="openAddFundsModal('${t.id}', '${t.name}')" class="bg-slate-800 dark:bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-slate-700 dark:hover:bg-slate-600 transition" ${percent >= 100 ? 'disabled style="opacity:0.5"' : ''}>Isi Dana</button>
                         </div>
                     </div>
                 `;
@@ -772,21 +916,23 @@
             const logs = [...db.auditLog].sort((a,b) => b.timestamp - a.timestamp).slice(0,5);
             logs.forEach(log => {
                 auditHtml += `
-                    <div onclick="viewAuditLog('${log.id}')" class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl mb-2 text-xs cursor-pointer hover:bg-rose-50 hover:border-rose-200 border border-transparent transition group">
-                        <img src="${log.photo}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 flex-shrink-0">
+                    <div onclick="viewAuditLog('${log.id}')" class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl mb-2 text-xs cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:border-rose-200 border border-transparent transition group">
+                        <img src="${log.photo}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700 flex-shrink-0">
                         <div class="flex-1 min-w-0">
-                            <p class="font-bold text-rose-600 truncate">${log.action}</p>
-                            <p class="text-slate-700 font-medium text-[10px] mt-0.5 truncate">${log.details || 'Lihat detail data...'}</p>
-                            <p class="text-slate-500 font-mono text-[9px] mt-1">${new Date(log.timestamp).toLocaleString('id-ID')}</p>
+                            <p class="font-bold text-rose-600 dark:text-rose-500 truncate">${log.action}</p>
+                            <p class="text-slate-700 dark:text-slate-300 font-medium text-[10px] mt-0.5 truncate">${log.details || 'Lihat detail data...'}</p>
+                            <p class="text-slate-500 dark:text-slate-500 font-mono text-[9px] mt-1">${new Date(log.timestamp).toLocaleString('id-ID')}</p>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-rose-400 transition"></i>
+                        <i class="fa-solid fa-chevron-right text-slate-300 dark:text-slate-600 group-hover:text-rose-400 transition"></i>
                     </div>
                 `;
             });
         } else {
-            auditHtml = `<p class="text-slate-400 text-xs italic text-center py-2">Belum ada riwayat penghapusan.</p>`;
+            auditHtml = `<p class="text-slate-400 dark:text-slate-500 text-xs italic text-center py-2">Belum ada riwayat penghapusan.</p>`;
         }
         
+        let isDark = localStorage.getItem('theme') === 'dark';
+
         const cloudStatusHtml = `
             <div class="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white shadow-lg mb-4 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -802,42 +948,70 @@
             </div>`;
 
         const html = `
-            <h2 class="font-bold text-xl text-slate-800 mb-4">Pengaturan & Sistem</h2>
+            <h2 class="font-bold text-xl text-slate-800 dark:text-white mb-4">Pengaturan & Sistem</h2>
             
             ${cloudStatusHtml}
 
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-4">
-                <h3 class="font-bold text-sm flex items-center gap-2 mb-3"><i class="fa-solid fa-file-export text-emerald-500"></i> Ekspor & Cetak Laporan</h3>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4 mb-4 flex justify-between items-center cursor-pointer" onclick="toggleTheme()">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full ${isDark ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-600'} flex items-center justify-center transition-colors">
+                        <i class="fa-solid ${isDark ? 'fa-moon' : 'fa-sun'}"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">Mode Gelap (Dark Mode)</h3>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Nyaman untuk mata saat malam</p>
+                    </div>
+                </div>
+                <div class="w-10 h-5 bg-slate-200 dark:bg-indigo-900 rounded-full relative transition-colors">
+                    <div class="w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${isDark ? 'right-0.5 bg-indigo-400' : 'left-0.5 shadow-sm'}"></div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4 mb-4">
+                <h3 class="font-bold text-sm flex items-center gap-2 mb-3 text-slate-800 dark:text-slate-200"><i class="fa-solid fa-file-export text-emerald-500"></i> Ekspor & Cetak Laporan</h3>
                 <div class="grid grid-cols-3 gap-2 mb-2">
-                    <button onclick="printReport()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 p-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition">
+                    <button onclick="printReport()" class="bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 p-3 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition">
                         <i class="fa-solid fa-print text-base"></i> Cetak / PDF
                     </button>
-                    <button onclick="downloadBackup()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-3 rounded-xl text-xs font-semibold flex flex-col items-center justify-center gap-1 transition">
+                    <button onclick="downloadBackup()" class="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 p-3 rounded-xl text-xs font-semibold flex flex-col items-center justify-center gap-1 transition">
                         <i class="fa-solid fa-download text-base"></i> Backup
                     </button>
-                    <label class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-3 rounded-xl text-xs font-semibold flex flex-col items-center justify-center gap-1 transition cursor-pointer">
+                    <label class="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 p-3 rounded-xl text-xs font-semibold flex flex-col items-center justify-center gap-1 transition cursor-pointer">
                         <i class="fa-solid fa-upload text-base"></i> Pulihkan
                         <input type="file" id="restoreFile" accept=".json" class="hidden" onchange="restoreData(event)">
                     </label>
                 </div>
-                <button onclick="exportToSheetsCSV()" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 p-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition">
+                <button onclick="exportToSheetsCSV()" class="w-full bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 p-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition">
                     <i class="fa-solid fa-file-excel"></i> Ekspor ke Sheets (CSV)
                 </button>
             </div>
 
-            <div class="bg-white rounded-2xl border border-rose-100 shadow-sm p-4 mb-4">
-                <h3 class="font-bold text-sm text-rose-600 flex items-center gap-2 mb-3"><i class="fa-solid fa-shield-halved"></i> Audit Keamanan (Log Hapus)</h3>
-                <p class="text-[10px] text-slate-500 mb-3 leading-tight">Sistem merekam wajah dan lokasi setiap aksi penghapusan untuk mencegah sabotase data.</p>
-                <div class="bg-white rounded-xl border border-slate-100">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-rose-100 dark:border-rose-900/50 shadow-sm p-4 mb-4">
+                <h3 class="font-bold text-sm text-rose-600 dark:text-rose-400 flex items-center gap-2 mb-3"><i class="fa-solid fa-shield-halved"></i> Audit Keamanan (Log Hapus)</h3>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 mb-3 leading-tight">Sistem merekam wajah dan lokasi setiap aksi penghapusan untuk mencegah sabotase data.</p>
+                <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
                     ${auditHtml}
                 </div>
             </div>
 
-            <div class="text-center text-slate-400 text-xs mt-8">
+            <div class="text-center text-slate-400 dark:text-slate-500 text-xs mt-8">
                 <p>Keuangan Keluarga ${APP_VERSION}</p>
             </div>
         `;
         document.getElementById('app-container').innerHTML = html;
+    }
+
+    function toggleTheme() {
+        let isDark = document.documentElement.classList.contains('dark');
+        if(isDark) {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        } else {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        }
+        if(currentPage === 'settings') renderSettings();
+        if(currentChart) drawDashboardChart(); // re-render label colors
     }
 
     function updateCategoryOptions() {
@@ -848,6 +1022,40 @@
         const dataList = document.getElementById('memberList');
         const uniqueMembers = [...new Set(db.transactions.map(t => t.member))];
         dataList.innerHTML = uniqueMembers.map(m => `<option value="${m}">`).join('');
+    }
+
+    function openBudgetModal(cat = '', currentLimit = '') {
+        const select = document.getElementById('budgetCategory');
+        select.innerHTML = CATEGORIES['pengeluaran'].map(c => `<option value="${c}">${c}</option>`).join('');
+        if(cat) select.value = cat;
+        document.getElementById('budgetLimit').value = currentLimit;
+        openModal('setBudgetModal');
+    }
+
+    async function saveBudget(e) {
+        e.preventDefault();
+        if(!userId) return;
+        
+        const category = document.getElementById('budgetCategory').value;
+        const limit = parseInt(document.getElementById('budgetLimit').value);
+        const budgetId = `bgt_${category.replace(/\s/g, '')}`;
+
+        closeModal('setBudgetModal');
+        try {
+            await setDoc(doc(collection(firestoreDb, 'users', userId, 'budgets'), budgetId), { id: budgetId, category, limit });
+            showMsg('Sukses', `Anggaran ${category} berhasil diatur!`);
+        } catch (err) { showMsg('Error', err.message); }
+    }
+
+    async function deleteBudget() {
+        if(!userId) return;
+        const category = document.getElementById('budgetCategory').value;
+        const budgetId = `bgt_${category.replace(/\s/g, '')}`;
+        closeModal('setBudgetModal');
+        try {
+            await deleteDoc(doc(collection(firestoreDb, 'users', userId, 'budgets'), budgetId));
+            showMsg('Dihapus', `Anggaran ${category} dihapus.`);
+        } catch (err) { showMsg('Error', err.message); }
     }
 
     function handleImageCompress(event, previewId, nameId) {
@@ -1028,7 +1236,7 @@
                 },
                 (err) => {
                     currentLocation = { lat: 0, lng: 0 };
-                    gpsStatus.innerText = "GPS Dilewati (Default)";
+                    gpsStatus.innerText = "GPS Dilewati";
                     gpsStatus.classList.replace('text-orange-500', 'text-emerald-500');
                     btn.disabled = false;
                     btn.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -1055,7 +1263,7 @@
         if(!pendingAction || !userId) return;
         
         const actionData = { ...pendingAction };
-        let deletedDetails = "Data tidak diketahui (versi lama)";
+        let deletedDetails = "Data tidak diketahui";
         let refundAmount = 0;
         let targetName = "";
 
@@ -1212,6 +1420,11 @@
                     for(const tgt of (parsed.targets || [])) {
                         await setDoc(doc(collection(firestoreDb, 'users', userId, 'targets'), tgt.id), tgt);
                     }
+                    if(parsed.budgets) {
+                        for(const b of parsed.budgets) {
+                            await setDoc(doc(collection(firestoreDb, 'users', userId, 'budgets'), b.id), b);
+                        }
+                    }
                     
                     showMsg('Sukses', 'Data lokal berhasil diunggah ke Cloud!');
                 } else {
@@ -1243,7 +1456,7 @@
         e.preventDefault();
         deferredPrompt = e;
         const installBtn = document.getElementById('installBtn');
-        if(installBtn) installBtn.classList.add('hidden');
+        if(installBtn) installBtn.classList.remove('hidden');
     });
     
     async function installPWA() {
@@ -1261,7 +1474,8 @@
         saveTransaction, saveTarget, openAddFundsModal, processAddFunds,
         triggerSecureDelete, cancelSecurityAuth, executeSecureAction,
         downloadBackup, restoreData, exportToSheetsCSV, installPWA,
-        loginGoogle, logoutGoogle, viewAuditLog, printReport
+        loginGoogle, logoutGoogle, viewAuditLog, printReport,
+        toggleTheme, openBudgetModal, saveBudget, deleteBudget, updateDateFilter, applyCustomDate
     });
 
 </script>
