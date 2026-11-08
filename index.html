@@ -313,6 +313,52 @@
     <img id="fullImagePreview" src="" class="max-w-full max-h-full rounded-lg shadow-2xl object-contain">
 </div>
 
+<!-- MODAL DETAIL TRANSAKSI -->
+<div id="txDetailModal" class="fixed inset-0 bg-black/60 z-[70] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-transparent dark:border-slate-700">
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
+            <h2 class="font-bold text-lg text-slate-800 dark:text-white"><i class="fa-solid fa-receipt mr-2 text-brand"></i>Detail Transaksi</h2>
+            <button onclick="closeModal('txDetailModal')" class="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition flex justify-center items-center"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-5 space-y-4">
+            <div class="text-center pb-4 border-b border-slate-100 dark:border-slate-700">
+                <p class="text-xs font-bold mb-1" id="detailType"></p>
+                <h3 class="text-3xl font-bold tracking-tight" id="detailAmount"></h3>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-1">Kategori</p>
+                    <p class="font-medium text-slate-800 dark:text-slate-200" id="detailCategory"></p>
+                </div>
+                <div>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-1">Tanggal</p>
+                    <p class="font-medium text-slate-800 dark:text-slate-200" id="detailDate"></p>
+                </div>
+                <div>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-1">Anggota</p>
+                    <p class="font-medium text-slate-800 dark:text-slate-200" id="detailMember"></p>
+                </div>
+                <div>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-1">ID Transaksi</p>
+                    <p class="font-mono text-[10px] text-slate-500 dark:text-slate-400 mt-1" id="detailId"></p>
+                </div>
+            </div>
+            <div>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-1">Keterangan</p>
+                <p class="font-medium text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-700 text-sm" id="detailDesc"></p>
+            </div>
+            <div id="detailImageContainer" class="hidden mt-2">
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-2">Lampiran Struk / Foto</p>
+                <img id="detailImage" src="" class="w-full h-32 object-cover rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:opacity-90 transition shadow-sm" onclick="" alt="Lampiran">
+            </div>
+        </div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-700 flex gap-3">
+             <button id="btnDetailDelete" class="flex-1 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 py-3 rounded-xl font-bold hover:bg-rose-200 dark:hover:bg-rose-900/50 transition border border-transparent dark:border-rose-800/50 text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-trash"></i> Hapus</button>
+             <button onclick="closeModal('txDetailModal')" class="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-3 rounded-xl font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition text-sm">Tutup</button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL PREVIEW AUDIT LOG -->
 <div id="auditPreviewModal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-transparent dark:border-slate-700">
@@ -776,7 +822,7 @@
             const isRefund = t.category === 'Refund Saldo' || (t.desc && t.desc.includes('!'));
             
             listHtml += `
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 mb-3 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between gap-3 relative group overflow-hidden">
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 mb-3 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between gap-3 relative group overflow-hidden cursor-pointer hover:border-brand/30 dark:hover:border-brand/50 hover:shadow-md transition" onclick="viewTransactionDetail('${t.id}')">
                     <div class="flex items-center gap-3 flex-1 min-w-0">
                         <div class="w-12 h-12 rounded-full ${isInc ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500' : 'bg-rose-50 dark:bg-rose-900/30 text-rose-500'} flex flex-shrink-0 items-center justify-center text-xl relative">
                             <i class="fa-solid ${isInc ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}"></i>
@@ -797,8 +843,8 @@
                     <div class="text-right flex flex-col items-end gap-1 flex-shrink-0 pl-2">
                         <p class="font-bold text-sm ${isInc ? 'text-emerald-500' : 'text-rose-500'}">${isInc ? '+' : '-'}${formatRp(t.amount)}</p>
                         <div class="flex gap-2">
-                            ${t.image ? `<button onclick="viewImage('${t.image}')" class="text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 text-xs bg-slate-50 dark:bg-slate-700 p-1.5 rounded"><i class="fa-solid fa-image"></i></button>` : ''}
-                            <button onclick="triggerSecureDelete('${t.id}', 'transaction')" class="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 text-xs bg-slate-50 dark:bg-slate-700 p-1.5 rounded" title="Hapus Transaksi"><i class="fa-solid fa-trash"></i></button>
+                            ${t.image ? `<button onclick="event.stopPropagation(); viewImage('${t.image}')" class="text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 text-xs bg-slate-50 dark:bg-slate-700 p-1.5 rounded"><i class="fa-solid fa-image"></i></button>` : ''}
+                            <button onclick="event.stopPropagation(); triggerSecureDelete('${t.id}', 'transaction')" class="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 text-xs bg-slate-50 dark:bg-slate-700 p-1.5 rounded" title="Hapus Transaksi"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
@@ -1359,6 +1405,44 @@
         document.getElementById('imagePreviewModal').classList.remove('hidden');
     }
 
+    function viewTransactionDetail(id) {
+        const tx = db.transactions.find(t => t.id === id);
+        if(!tx) return;
+
+        const isInc = tx.type === 'pemasukan';
+        const typeLabel = document.getElementById('detailType');
+        typeLabel.innerText = tx.type.toUpperCase();
+        typeLabel.className = `text-[10px] font-bold tracking-widest px-3 py-1 rounded-full inline-block mb-2 ${isInc ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400'}`;
+        
+        const amountLabel = document.getElementById('detailAmount');
+        amountLabel.innerText = `${isInc ? '+' : '-'}${formatRp(tx.amount)}`;
+        amountLabel.className = `text-3xl font-bold tracking-tight ${isInc ? 'text-emerald-500' : 'text-rose-500'}`;
+
+        document.getElementById('detailCategory').innerText = tx.category;
+        document.getElementById('detailDate').innerText = formatDate(tx.date);
+        document.getElementById('detailMember').innerText = tx.member;
+        document.getElementById('detailId').innerText = tx.id;
+        document.getElementById('detailDesc').innerText = tx.desc || '- Tidak ada keterangan -';
+
+        const imgContainer = document.getElementById('detailImageContainer');
+        if(tx.image) {
+            imgContainer.classList.remove('hidden');
+            const imgEl = document.getElementById('detailImage');
+            imgEl.src = tx.image;
+            imgEl.onclick = () => viewImage(tx.image);
+        } else {
+            imgContainer.classList.add('hidden');
+        }
+
+        const btnDelete = document.getElementById('btnDetailDelete');
+        btnDelete.onclick = () => {
+            closeModal('txDetailModal');
+            triggerSecureDelete(tx.id, 'transaction');
+        };
+
+        openModal('txDetailModal');
+    }
+
     function viewAuditLog(logId) {
         const log = db.auditLog.find(l => l.id === logId);
         if(!log) return;
@@ -1475,7 +1559,8 @@
         triggerSecureDelete, cancelSecurityAuth, executeSecureAction,
         downloadBackup, restoreData, exportToSheetsCSV, installPWA,
         loginGoogle, logoutGoogle, viewAuditLog, printReport,
-        toggleTheme, openBudgetModal, saveBudget, deleteBudget, updateDateFilter, applyCustomDate
+        toggleTheme, openBudgetModal, saveBudget, deleteBudget, updateDateFilter, applyCustomDate,
+        viewTransactionDetail
     });
 
 </script>
